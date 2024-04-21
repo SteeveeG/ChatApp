@@ -1,0 +1,64 @@
+﻿<Window x:Class="ChatApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:homeNavbar="clr-namespace:ChatApp.HomeNavBar"
+        xmlns:chatList="clr-namespace:ChatApp.ChatList"
+        xmlns:chat="clr-namespace:ChatApp.Chat" WindowStyle="None"
+        AllowsTransparency="True" MouseLeftButtonDown="Move"
+        xmlns:settings="clr-namespace:ChatApp.Settings" MinWidth="815"
+        xmlns:contact="clr-namespace:ChatApp.Contact"
+        xmlns:chatApp="clr-namespace:ChatApp"
+        xmlns:windowTools="clr-namespace:ChatApp.WindowTools"
+        xmlns:converter="clr-namespace:ChatApp.Converter"
+        mc:Ignorable="d" ResizeMode="CanResizeWithGrip"
+        Title="MainWindow" Height="650" Width="1400">
+    <Window.DataContext>
+        <chatApp:MainViewModel />
+    </Window.DataContext>
+    <Window.Resources>
+        <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="50" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <windowTools:WindowTools Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" Padding="0,10,0,0" />
+
+
+        <homeNavbar:HomeNavbarControl Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" Padding="0,10,0,0"
+                                      ViewModel="{Binding  HomeNavbarViewModel}" />
+
+
+        <chatList:ChatListControl Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Padding="0,15,0,0"
+                                  BorderBrush="#22303d" BorderThickness="1,0,0,0"
+                                  Visibility="{Binding HomeNavbarViewModel.ChatIsChecked 
+                                  ,Converter={StaticResource
+                BoolToVisibilityConverter}}"
+                                  ViewModel="{Binding ChatListViewModel}" />
+        <chat:ChatControl Grid.Row="1" Grid.Column="2"
+                          Visibility="{Binding HomeNavbarViewModel.ChatIsChecked ,Converter={StaticResource
+                BoolToVisibilityConverter}}"
+                          ViewModel="{Binding ChatViewModel}" />
+
+
+        <contact:ContactControl Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                Visibility="{Binding HomeNavbarViewModel.ContactsIsChecked ,Converter={StaticResource
+                BoolToVisibilityConverter}}"
+                                ViewModel="{Binding ContactViewModel}" />
+
+
+        <settings:SettingsControl Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                  Visibility="{Binding HomeNavbarViewModel.SettingsIsChecked ,Converter={StaticResource
+                BoolToVisibilityConverter}}"
+                                  ViewModel="{Binding SettingsViewModel}" />
+
+    </Grid>
+</Window>

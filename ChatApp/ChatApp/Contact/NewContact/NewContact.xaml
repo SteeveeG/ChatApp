@@ -1,0 +1,39 @@
+<Window x:Class="ChatApp.Contact.NewContact.NewContact"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:newContact="clr-namespace:ChatApp.Contact.NewContact"
+        mc:Ignorable="d"  Background="#2d3e50"   Name="Control"
+        MouseLeftButtonDown="Move"
+        BorderBrush="GhostWhite" BorderThickness="1"
+        AllowsTransparency="True" WindowStyle="None" ResizeMode="NoResize"
+        Title="NewContact" Height="350" Width="400">
+    <Window.Resources>
+        <ResourceDictionary Source="../ContactDictionary.xaml"/>
+    </Window.Resources>
+    <Window.DataContext>
+        <newContact:NewContactViewModel/>
+    </Window.DataContext>
+    
+    <StackPanel DataContext="{Binding ElementName=Control, Path=ViewModel }">
+        <Button Height="40" Style="{StaticResource TransparentButton}" 
+                Click="CloseWindow">
+            <Label
+                Style="{StaticResource CloseLabel}"
+                Content="X"  />
+        </Button>
+        <Label Content="New Contact" FontSize="35" Foreground="GhostWhite" FontFamily="{StaticResource SwLink}"
+               HorizontalAlignment="Center" Margin="0,10,0,70"/>
+       
+       <Grid Margin="0,0,0,50">
+           <TextBlock Text=" User-Id" Name="UserIdWatermark"  
+                      Style="{StaticResource InputWatermark}"/>
+           <TextBox Name="UserId" Style="{StaticResource Input}"
+                    TextChanged="RemoveAddWatermark" 
+                    Text="{Binding NewContactId}"  />
+       </Grid>
+       <Button Style="{StaticResource Button}" Content="Add Contact"
+               Command="{Binding AddNewContactCommand}"/>
+   </StackPanel>
+</Window>

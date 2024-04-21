@@ -1,0 +1,45 @@
+<UserControl x:Class="ChatApp.Settings.SettingsInput.SettingsInputControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" Background="#2d3e50"  Name="Control"
+             d:DesignHeight="50" d:DesignWidth="500">
+    <UserControl.Resources>
+        <ResourceDictionary Source="../SettingsDictionary.xaml" />
+    </UserControl.Resources>
+    <Grid DataContext="{Binding ElementName=Control, Path=ViewModel }">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="180"/>
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+
+
+        <Label Grid.Column="0" Content="{Binding Label}"
+               VerticalAlignment="Center" FontSize="20" Foreground="GhostWhite"
+               FontFamily="{StaticResource SwIsop1}" />
+
+        <Grid Grid.Column="1" Margin="15,0" MaxWidth="700"
+              Visibility="{Binding IsTextInput,
+
+                       Converter={StaticResource BoolToVisibilityConverter}}">
+            <TextBlock Margin="10" Text="{Binding WaterMark}" Foreground="White" Background="#2d3e50"
+                       FontFamily="{StaticResource SwIsop1}" FontSize="17.5" VerticalAlignment="Center" Name="Watermark"
+                       Opacity="0.5"
+                       Visibility="{Binding IsTextInput,
+                        Converter={StaticResource BoolToVisibilityConverter}}" />
+            <TextBox Margin="10" BorderBrush="#19232e" BorderThickness="0,0,0,1" Name="NewName"
+                     TextChanged="RemoveAddWatermark" CaretBrush="GhostWhite"
+                     Background="Transparent" VerticalContentAlignment="Center" Foreground="GhostWhite"
+                     FontFamily="{StaticResource SwIsop1}" Text="{Binding NewInput}" FontSize="17.5" VerticalAlignment="Center" />
+        </Grid>
+
+        <Button Grid.Column="1"
+                Command="{Binding DelegateCommand}"
+                Style="{StaticResource Button}"
+                Content="{Binding ButtonContent}"
+                Visibility="{Binding IsButtonInput,
+                 Converter={StaticResource BoolToVisibilityConverter}}" />
+        
+    </Grid>
+</UserControl>

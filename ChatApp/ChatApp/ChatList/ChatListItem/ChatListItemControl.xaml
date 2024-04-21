@@ -1,0 +1,43 @@
+<UserControl x:Class="ChatApp.ChatList.ChatListItem.ChatListItemControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" Name="Control" Background="#2d3e50"
+             d:DesignHeight="60" Width="350">
+    <Grid MouseEnter="Mouse" MouseLeave="Mouse"  >
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="60" />
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Ellipse Grid.Column="0"
+                 Width="50" Height="50" Margin="5">
+            <Ellipse.Fill>
+                <!-- <ImageBrush ImageSource=""></ImageBrush> -->
+                Maroon
+            </Ellipse.Fill>
+        </Ellipse>
+        <Grid Grid.Column="1" Margin="10 0  0 0">
+            <Grid.RowDefinitions>
+                <RowDefinition />
+                <RowDefinition />
+
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" FontFamily="{StaticResource SwIsop1}" Height="25"
+                       Text="{Binding Name}" Margin="0 0 0 0"
+                       VerticalAlignment="Center" FontSize="18" Foreground="White"  />
+            <TextBlock Grid.Row="1" FontFamily="{StaticResource SwIsop1}" Text="{Binding LastMessage}"
+                       VerticalAlignment="Top" FontSize="15" Foreground="White" TextTrimming="WordEllipsis" />
+
+        </Grid>
+       
+        <StackPanel Grid.Column="2" > 
+            <TextBlock FontFamily="{StaticResource SwIsop1}" Text="{Binding LastMessageTime}"  FontSize="12" Foreground="White"
+                       Margin="0,5,7,0" />
+        </StackPanel>
+    </Grid> 
+
+</UserControl>

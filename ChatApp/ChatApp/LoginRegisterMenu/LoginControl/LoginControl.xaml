@@ -1,0 +1,33 @@
+<UserControl x:Class="ChatApp.LoginRegisterMenu.LoginControl.LoginControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" Background="#2d3e50" Name="Control"
+             d:DesignHeight="300" d:DesignWidth="400">
+    <UserControl.Resources>
+        <ResourceDictionary Source="../LogInRegisterResourceDictionary.xaml" />
+    </UserControl.Resources>
+    <StackPanel DataContext="{Binding ElementName=Control, Path=ViewModel }">
+        <Label Name="Header" Style="{StaticResource Header}"
+               Foreground="{Binding ForeGroundColor}">Login</Label>
+        <Grid>
+            <TextBlock Text=" Name" Name="NameWatermark" Style="{StaticResource InputWatermark}"/>
+            <TextBox Name="Name" Style="{StaticResource Input}"
+                      TextChanged="RemoveAddWatermark"  BorderBrush="{Binding TextboxBorderColor}"
+                      SelectionChanged="OnSelectionChanged"
+                     Text="{Binding Name}"  />
+           
+        </Grid>
+        <Grid>
+            <TextBlock Text=" Password" Name="PasswordWatermark"
+                       Style="{StaticResource InputWatermark}"/>
+
+            <TextBox Name="Password" Style="{StaticResource Input}"
+                     Text="{Binding Password}"
+                     BorderBrush="{Binding TextboxBorderColor}"
+                     TextChanged="RemoveAddWatermark" 
+                     SelectionChanged="OnSelectionChanged"/>   
+        </Grid>
+    </StackPanel>
+</UserControl>

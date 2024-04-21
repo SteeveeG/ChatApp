@@ -1,0 +1,20 @@
+<UserControl x:Class="ChatApp.ChatList.ChatListControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:chatListItem="clr-namespace:ChatApp.ChatList.ChatListItem"
+             mc:Ignorable="d" Name="Control" Background="#2d3e50"
+             d:DesignHeight="300" d:DesignWidth="300">
+    <Grid DataContext="{Binding ElementName=Control, Path=ViewModel }">
+        <ListBox Background="#2d3e50" BorderBrush="Transparent" SelectionMode="Single"
+                 ItemsSource="{Binding List}" Name="ListBox">
+            <ListBox.ItemTemplate >
+                <DataTemplate>
+                    <chatListItem:ChatListItemControl 
+                        ViewModel="{Binding}" MouseLeftButtonDown="Click"/>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

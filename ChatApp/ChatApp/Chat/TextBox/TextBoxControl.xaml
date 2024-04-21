@@ -1,0 +1,27 @@
+<UserControl x:Class="ChatApp.Chat.TextBox.TextBoxControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"  Background="#1e2a36" Name="Control"
+             d:DesignHeight="70" d:DesignWidth="1200">
+    <UserControl.Resources>
+        <ResourceDictionary Source="../ChatDictionary.xaml"/>
+    </UserControl.Resources>
+    <Grid DataContext="{Binding ElementName=Control, Path=ViewModel }">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="15"/>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="65"/>
+        </Grid.ColumnDefinitions>
+        <TextBox Grid.Column="1" Margin="15" Style="{StaticResource RoundedEdges}"
+                 Text="{Binding Message}" TextChanged="Textchanged" 
+                 KeyDown="OnKeyDownHandler" BorderBrush="{Binding BorderBrush}"/>
+ 
+        <Button Grid.Column="2" Command="{Binding SendMessageCommand}"
+                MouseEnter="btnMouse" MouseLeave="btnMouse" 
+                Foreground="{Binding Foreground}"
+             Style="{StaticResource Btn}"
+             Content="T"/>
+    </Grid>
+</UserControl>

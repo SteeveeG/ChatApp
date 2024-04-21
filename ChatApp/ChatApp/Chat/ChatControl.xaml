@@ -1,0 +1,43 @@
+<UserControl x:Class="ChatApp.Chat.ChatControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:header="clr-namespace:ChatApp.Chat.Header"
+             xmlns:messages="clr-namespace:ChatApp.Chat.Messages"
+             xmlns:textBox="clr-namespace:ChatApp.Chat.TextBox"
+             mc:Ignorable="d" Name="Control" Background="#273747"
+             d:DesignHeight="500" d:DesignWidth="1200">
+    <UserControl.Resources>
+        <ResourceDictionary Source="ChatDictionary.xaml" />
+    </UserControl.Resources>
+    <Grid DataContext="{Binding ElementName=Control, Path=ViewModel}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80" />
+            <RowDefinition />
+            <RowDefinition />
+            <RowDefinition Height="70" />
+        </Grid.RowDefinitions>
+        <header:HeaderControl Grid.Row="0"
+               ViewModel="{Binding HeaderViewModel}" />
+        <ListBox Grid.Row="1" Grid.RowSpan="2"
+                 Style="{StaticResource ChatListBox}"
+                 ItemsSource="{Binding Messages}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <messages:MessageControl
+                        DataContext="{Binding}" />
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="{x:Type ListBoxItem}">
+                    <Setter Property="Focusable" Value="False" />
+                    <Setter Property="IsEnabled" Value="False" />
+                    <Setter Property="Height" Value="Auto" />
+                </Style>
+            </ListBox.ItemContainerStyle>
+        </ListBox>
+        <textBox:TextBoxControl Grid.Row="3"
+                               ViewModel="{Binding TextBoxViewModel}" />
+    </Grid>
+</UserControl>
