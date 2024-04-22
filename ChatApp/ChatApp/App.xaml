@@ -2,8 +2,11 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:ChatApp"
-             StartupUri="MainWindow.xaml">
+             StartupUri="LoginRegisterMenu/LoginRegisterMenu.xaml">
     <Application.Resources>
-         
+        <FontFamily x:Key="SwIsop1">/ChatApp;component/Assets/SWIsop1.ttf#SWIsop1</FontFamily>
+        <FontFamily x:Key="SwLink">/ChatApp;component/Assets/SWLink.ttf#SWLink</FontFamily>
+
+
     </Application.Resources>
 </Application>

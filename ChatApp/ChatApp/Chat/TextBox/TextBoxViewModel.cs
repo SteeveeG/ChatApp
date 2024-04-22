@@ -30,7 +30,7 @@ public class TextBoxViewModel : ViewModelBase
             return;
         }
         BorderBrush = Brushes.LightSlateGray;
-        ChatViewModel.Messages.Add(new MessageViewModel(Message, true));
+        //ChatViewModel.Messages.Add(new MessageViewModel(Message, true));
         var messageModel = new Message()
         {
             UserId = accUser.UserId,
@@ -38,6 +38,7 @@ public class TextBoxViewModel : ViewModelBase
             Content = Message,
             Time = DateTime.Now
         };
+        await ChatViewModel.SendMessage(messageModel);
         Message = string.Empty;
     }
 

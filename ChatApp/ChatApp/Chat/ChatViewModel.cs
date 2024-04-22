@@ -1,4 +1,8 @@
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
 using ChatApp.Chat.Header;
 using ChatApp.Chat.Messages;
 using ChatApp.Chat.TextBox;
@@ -23,7 +27,17 @@ public
         TextBoxViewModel = new TextBoxViewModel(this , accUser);
     }
     
-
+    public async Task SendMessage(Message message)
+    {
+        using var client = new HttpClient();
+        client.BaseAddress = new Uri("https://localhost:7049");
+         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        var response = await client.PostAsJsonAsync( "Sql/AddMessage" , message);
+        if (response.IsSuccessStatusCode)
+        {
+            Messages.Add(new MessageViewModel(message.Content, true));
+        }
+    }
     public ObservableCollection<MessageViewModel> Messages
     {
         get => messages;

@@ -32,7 +32,7 @@ public class NewContactViewModel : ViewModelBase
             return;
         }
         using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7261");
+        client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         var response = await client.PostAsync($"Sql/AddContact", new StringContent(""));

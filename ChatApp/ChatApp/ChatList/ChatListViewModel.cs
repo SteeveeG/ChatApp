@@ -12,7 +12,7 @@ public class ChatListViewModel : ViewModelBase
     private ChatViewModel ChatViewModel { get; set; }
     private string userId;
     private Func<int, List<Message>> getMessage;
-    private Func<string, string> getChatId;
+    private Func<string,  Task<string>> getChatId;
 
     public ChatListViewModel(ChatViewModel chatViewModel)
     {
@@ -21,7 +21,7 @@ public class ChatListViewModel : ViewModelBase
     }
 
     public ChatListViewModel(ChatViewModel chatViewModel, string userId, Func<int, List<Message>> getMessage
-    , Func<string, string> getChatId)
+    , Func<string, Task<string>> getChatId)
     {
         this.getChatId = getChatId;
         this.getMessage = getMessage;
@@ -29,10 +29,10 @@ public class ChatListViewModel : ViewModelBase
         this.userId = userId;
         ChatViewModel = chatViewModel;
     }
-    public void Click(int index)
+    public async void Click(int index)
     {
         ChatViewModel.HeaderViewModel.Name = list[index].Name;
-        var chatId = getChatId(list[index].ContactId);
+        var chatId = await getChatId(list[index].ContactId);
         ChatViewModel.ChatId = chatId;
         var messages = getMessage(index);
         ChatViewModel.Messages = new ObservableCollection<MessageViewModel>();

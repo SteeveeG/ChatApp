@@ -48,7 +48,7 @@ public class LoginRegisterMenuViewModel : ViewModelBase
     public async Task<AccUser> Create(string username, string password)
     {
         using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7261");
+        client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         var response = await client.PostAsync($"Sql/CreateAcc?username={username}&password={password}" ,null);
@@ -63,7 +63,7 @@ public class LoginRegisterMenuViewModel : ViewModelBase
     private async Task<bool> ControlCreate(string username)
     {
         using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7261");
+        client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         var response = await client.GetAsync($"Sql/ControlCreate?username={username}");
@@ -79,7 +79,7 @@ public class LoginRegisterMenuViewModel : ViewModelBase
     private async Task<AccUser> Login(string username, string password)
     {
         using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7261");
+        client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         var response = await client.GetAsync($"Sql/GetAcc?username={username}&password={password}");

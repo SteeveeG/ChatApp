@@ -28,7 +28,7 @@ public class MainViewModel : ViewModelBase
     private AccUser user;
     private List<List<Message>> messages;
     public Func<int, List<Message>> GetMessage { get; set; }
-    public Func<string, string> GetChatIdFunc { get; set; }
+    public Func<string, Task<string>> GetChatIdFunc { get; set; }
 
     public MainViewModel()
     {
@@ -54,9 +54,10 @@ public class MainViewModel : ViewModelBase
         GetContacts();
     }
 
-    private string GetChatId(string ContactId)
+    private async Task<string> GetChatId(string ContactId)
     {
-        return string.Empty;
+        var chatId = await GetChatId(ContactId, user.UserId);
+        return chatId;
     }
 
     private List<Message> GetMessages(int index)
@@ -71,7 +72,7 @@ public class MainViewModel : ViewModelBase
     private async Task AddChatMessages(string chatId)
     {
         using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7261");
+        client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         var response = await client.GetAsync($"Sql/GetMessages?chatId={chatId}");
@@ -89,7 +90,7 @@ public class MainViewModel : ViewModelBase
     private async Task<string> GetChatId(string contactId, string userId)
     {
         using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7261");
+        client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         var response = await client.GetAsync($"Sql/GetChat?userId={userId}&contactId={contactId}");
@@ -105,7 +106,7 @@ public class MainViewModel : ViewModelBase
     private async void GetContacts()
     {
         using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7261");
+        client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         var response = await client.GetAsync($"Sql/GetContacts?userId={user.UserId}");

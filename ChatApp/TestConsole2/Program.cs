@@ -31,7 +31,7 @@ void s(msg msg)
 async Task OpenStream(Action<msg> update)
 {
     Console.Write("Connection Building...");
-    var channel = GrpcChannel.ForAddress("https://localhost:7277/");
+    var channel = GrpcChannel.ForAddress("https://localhost:7049/");
     sendReceiveClient = new ChatService.ChatServiceClient(channel);
     var result = sendReceiveClient.ServerSendMessage(
         new msg{Id = "Console 2"});
@@ -48,7 +48,7 @@ async Task OpenStream(Action<msg> update)
 
 void WriteInStream(string message , string id)
 {
-    sendReceiveClient = new ChatService.ChatServiceClient(GrpcChannel.ForAddress("https://localhost:7277/"));
+    sendReceiveClient = new ChatService.ChatServiceClient(GrpcChannel.ForAddress("https://localhost:7049/"));
     sendReceiveClient.ServerReceiveMessage(new msg()
     {
         Message = message,
