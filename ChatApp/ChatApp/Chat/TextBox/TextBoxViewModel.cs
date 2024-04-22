@@ -1,5 +1,6 @@
 using System.Windows.Media;
 using ChatApp.Chat.Messages;
+using Library.Model;
 
 namespace ChatApp.Chat.TextBox;
 
@@ -10,16 +11,18 @@ public class TextBoxViewModel : ViewModelBase
     private SolidColorBrush borderBrush;
     private ChatViewModel ChatViewModel { get; set; }
     public DelegateCommand SendMessageCommand { get; set; }
+    private AccUser accUser;
 
-    public TextBoxViewModel(ChatViewModel chatViewModel)
+    public TextBoxViewModel(ChatViewModel chatViewModel, AccUser accUser)
     {
+        this.accUser = accUser;
         SendMessageCommand = new DelegateCommand(SendMessage);
         ChatViewModel = chatViewModel;
         Foreground = Brushes.Gray;
         BorderBrush = Brushes.LightSlateGray;
     }
 
-    public void SendMessage()
+    public async void SendMessage()
     {
         if (string.IsNullOrEmpty(Message))
         {
@@ -28,6 +31,13 @@ public class TextBoxViewModel : ViewModelBase
         }
         BorderBrush = Brushes.LightSlateGray;
         ChatViewModel.Messages.Add(new MessageViewModel(Message, true));
+        var messageModel = new Message()
+        {
+            UserId = accUser.UserId,
+            ChatId = ChatViewModel.ChatId,
+            Content = Message,
+            Time = DateTime.Now
+        };
         Message = string.Empty;
     }
 

@@ -46,7 +46,7 @@ public class MainViewModel : ViewModelBase
         GetMessage = GetMessages;
         Messages = new List<List<Message>>();
         user = acc;
-        ChatViewModel = new ChatViewModel();
+        ChatViewModel = new ChatViewModel(acc);
         ChatListViewModel = new ChatListViewModel(ChatViewModel, acc.UserId, GetMessage ,GetChatIdFunc);
         HomeNavbarViewModel = new HomeNavbarViewModel();
         SettingsViewModel = new SettingsViewModel(acc.UserId);

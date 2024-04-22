@@ -33,6 +33,7 @@ public class ChatListViewModel : ViewModelBase
     {
         ChatViewModel.HeaderViewModel.Name = list[index].Name;
         var chatId = getChatId(list[index].ContactId);
+        ChatViewModel.ChatId = chatId;
         var messages = getMessage(index);
         ChatViewModel.Messages = new ObservableCollection<MessageViewModel>();
         if (messages == null)
