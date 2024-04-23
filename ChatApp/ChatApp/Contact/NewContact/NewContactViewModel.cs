@@ -1,6 +1,8 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Web;
+using ChatApp.ApiHandler;
 using Library.Model;
 
 namespace ChatApp.Contact.NewContact;
@@ -11,7 +13,7 @@ public class NewContactViewModel : ViewModelBase
 
     public AccUser AccUser { get; set; }
 
-    private Action action;
+    private Action<Library.Model.Contact> action;
     private string newContactId;
 
     public NewContactViewModel()
@@ -19,31 +21,25 @@ public class NewContactViewModel : ViewModelBase
         AddNewContactCommand = new DelegateCommand(AddNewContact);
     }
 
-    public NewContactViewModel(AccUser user, Action action)
+    public NewContactViewModel(AccUser user, Action<Library.Model.Contact> action)
     {
+        AddNewContactCommand = new DelegateCommand(AddNewContact);
         AccUser = user;
         this.action = action;
     }
 
     private async void AddNewContact()
     {
+        var contact = new Library.Model.Contact(); 
         if (string.IsNullOrEmpty(NewContactId))
         {
             return;
         }
-        using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7049");
-        client.DefaultRequestHeaders.Accept.Clear();
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        var response = await client.PostAsync($"Sql/AddContact", new StringContent(""));
-        if (response.IsSuccessStatusCode)
-        {
-            var contacts = await response.Content.ReadFromJsonAsync<List<Library.Model.Contact>>();
-          
-        }
-        
-
-        Console.WriteLine("Internal server Error");
+        newContactId = HttpUtility.UrlEncode(newContactId);
+        var userid = HttpUtility.UrlEncode(AccUser.UserId);
+        contact = await ApiPost.Post<Library.Model.Contact>($"Sql/CreateContact?userId={userid}&contactId={newContactId}", new StringContent(string.Empty));
+        action(contact);
+        NewContactId = string.Empty;
     }
 
     public string NewContactId

@@ -20,7 +20,7 @@
                    Foreground="GhostWhite" FontFamily="{StaticResource SwIsop1}" FontSize="15" Opacity="0.7" />
         </StackPanel>
         <Button Grid.Column="1" Style="{StaticResource TransparentButton}"
-                MinWidth="50" Command="{Binding Delete}" Click="Click">
+                MinWidth="50" Click="Click">
             <Button.Content>
                 <Label Content="X" VerticalAlignment="Center"   HorizontalAlignment="Center"
                        Margin="5"

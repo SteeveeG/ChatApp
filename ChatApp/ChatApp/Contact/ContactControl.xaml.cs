@@ -22,7 +22,7 @@ public partial class ContactControl : UserControl
     private void OpenNewContactWindow(object sender, RoutedEventArgs e)
     {
         var newContact = new NewContact.NewContact();
-        newContact.ViewModel = new NewContactViewModel(ViewModel.AccUser , () => ViewModel.UpdateContactList());
+        newContact.ViewModel = new NewContactViewModel(ViewModel.AccUser , value => ViewModel.UpdateContactList(value));
         newContact.Show();
     }
 }

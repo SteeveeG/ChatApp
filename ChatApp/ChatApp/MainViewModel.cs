@@ -1,6 +1,7 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Web;
+using ChatApp.ApiHandler;
 using ChatApp.Chat;
 using ChatApp.ChatList;
 using ChatApp.ChatList.ChatListItem;
@@ -12,21 +13,18 @@ using Library.Model;
 
 namespace ChatApp;
 
-//TODO Die Funktion Add New Contact erstellen und eine Liste Mit ChatId/UserId/ContactID erstellen damit nichtjedes mal ein 
-//TODO API Call Kommen muss 
+//TODO Ids for Call Encoden
 //TODO Context ContactID ist die UserId von deinem Contact :D
 public class MainViewModel : ViewModelBase
 {
     private List<Library.Model.Contact> contacts;
+    private AccUser user;
+    private List<List<Message>> messages;
     public HomeNavbarViewModel HomeNavbarViewModel { get; set; }
     public ChatListViewModel ChatListViewModel { get; set; }
     public ChatViewModel ChatViewModel { get; set; }
     public SettingsViewModel SettingsViewModel { get; set; }
     public ContactViewModel ContactViewModel { get; set; }
-
-
-    private AccUser user;
-    private List<List<Message>> messages;
     public Func<int, List<Message>> GetMessage { get; set; }
     public Func<string, Task<string>> GetChatIdFunc { get; set; }
 
@@ -40,14 +38,15 @@ public class MainViewModel : ViewModelBase
         SettingsViewModel = new SettingsViewModel();
         ContactViewModel = new ContactViewModel(this);
     }
+
     public MainViewModel(AccUser acc)
     {
-        GetChatIdFunc =  GetChatId;
+        GetChatIdFunc = GetChatId;
         GetMessage = GetMessages;
         Messages = new List<List<Message>>();
         user = acc;
         ChatViewModel = new ChatViewModel(acc);
-        ChatListViewModel = new ChatListViewModel(ChatViewModel, acc.UserId, GetMessage ,GetChatIdFunc);
+        ChatListViewModel = new ChatListViewModel(ChatViewModel, acc.UserId, GetMessage, GetChatIdFunc);
         HomeNavbarViewModel = new HomeNavbarViewModel();
         SettingsViewModel = new SettingsViewModel(acc.UserId);
         ContactViewModel = new ContactViewModel(this, acc);
@@ -64,68 +63,77 @@ public class MainViewModel : ViewModelBase
     {
         return Messages[index];
     }
-    public void DeleteContact(string userId)
+
+    public async Task<bool> DeleteContact(string contactId)
     {
-        
+        var chatid = await GetChatId(contactId);
+        using var client = new HttpClient();
+        client.BaseAddress = new Uri("https://localhost:7049");
+        client.DefaultRequestHeaders.Accept.Clear();
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        try
+        {
+            await client.DeleteAsync($"Sql/DeleteMessages?chatId={chatid}&userId={contactId}");
+            await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}");
+        }
+        catch
+        {
+            return false;
+        }
+
+        return true;
     }
 
     private async Task AddChatMessages(string chatId)
     {
-        using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7049");
-        client.DefaultRequestHeaders.Accept.Clear();
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        var response = await client.GetAsync($"Sql/GetMessages?chatId={chatId}");
-        if (response.IsSuccessStatusCode)
-        {
-            var chat = await response.Content.ReadFromJsonAsync<List<Message>>();
-            Messages.Add(chat);
-        }
-        else
-        {
-            Messages.Add(new List<Message>());
-        }
+        var convertedchatId = HttpUtility.UrlEncode(chatId);
+        var result = await ApiGet.GetApiIn<List<Message>>($"Sql/GetMessages?chatId={convertedchatId}");
+        Messages.Add(result ?? new List<Message>());
     }
 
     private async Task<string> GetChatId(string contactId, string userId)
     {
-        using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7049");
-        client.DefaultRequestHeaders.Accept.Clear();
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        var response = await client.GetAsync($"Sql/GetChat?userId={userId}&contactId={contactId}");
-        if (response.IsSuccessStatusCode)
-        {
-            var chat = await response.Content.ReadFromJsonAsync<Library.Model.Chat>();
-            return chat.ChatId;
-        }
-
-        Console.WriteLine("Internal server Error");
-        return "-1";
+        var convertedcontactId = HttpUtility.UrlEncode(contactId);
+        var converteduserId = HttpUtility.UrlEncode(userId);
+        var chat = await ApiGet.GetApiIn<Library.Model.Chat>($"Sql/GetChat?userId={converteduserId}&contactId={convertedcontactId}");
+        return chat.ChatId;
     }
+
     private async void GetContacts()
     {
-        using var client = new HttpClient();
-        client.BaseAddress = new Uri("https://localhost:7049");
-        client.DefaultRequestHeaders.Accept.Clear();
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        var response = await client.GetAsync($"Sql/GetContacts?userId={user.UserId}");
-        if (response.IsSuccessStatusCode)
+        var converteduserId = HttpUtility.UrlEncode(user.UserId);
+        Contacts = await ApiGet.GetApiIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
+        foreach (var contact in Contacts)
         {
-            Contacts = await response.Content.ReadFromJsonAsync<List<Library.Model.Contact>>();
-            foreach (var contact in Contacts)
-            {
-                ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel));
-                ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.ContactId,
-                    ContactViewModel.Delete));
-
-                var chatId = await GetChatId(contact.ContactId,user.UserId);
-                await AddChatMessages(chatId);
-            } 
+            ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel));
+            ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.ContactId,
+                ContactViewModel.Delete));
+            var chatId = await GetChatId(contact.ContactId, user.UserId);
+            //Todo Returns Null 
+            await AddChatMessages(chatId);
         }
-        Console.WriteLine("Internal server Error");
     }
 
+
+    public async void UpdateContacts(Library.Model.Contact contact)
+    {
+        await ControlCreateChatId(contact);
+        ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel));
+        ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.ContactId,
+            ContactViewModel.Delete));
+        Messages.Add(new List<Message>());
+    }
+
+    private async Task ControlCreateChatId(Library.Model.Contact contact)
+    {
+        if (await GetChatId(contact.ContactId) != null)
+        {
+            return;
+        }
+        var convertedUserId = HttpUtility.UrlEncode(contact.UserId);
+        var convertedContactId = HttpUtility.UrlEncode(contact.ContactId);
+        await ApiGet.GetApiIn<Library.Model.Chat>($"Sql/CreateChat?userId={convertedUserId}&contactId={convertedContactId}");
+    }
 
     public List<List<Message>> Messages
     {

@@ -14,10 +14,11 @@ public class ContactViewModel : ViewModelBase
     private MainViewModel MainViewModel { get; set; }
 
     public AccUser AccUser { get; set; }
-    public ContactViewModel(MainViewModel mainViewModel, AccUser accUser = null 
-        )
+
+    public ContactViewModel(MainViewModel mainViewModel, AccUser accUser = null
+    )
     {
-     AccUser = accUser ??= new AccUser()
+        AccUser = accUser ??= new AccUser()
         {
             UserId = "-1",
             Username = "-1",
@@ -26,19 +27,22 @@ public class ContactViewModel : ViewModelBase
         OwnUserId = accUser.UserId;
         OwnUsername = accUser.Username;
         MainViewModel = mainViewModel;
-        Contacts= new ObservableCollection<EditContactViewModel>();
+        Contacts = new ObservableCollection<EditContactViewModel>();
     }
-   
-    public void UpdateContactList()
+
+    public void UpdateContactList(Library.Model.Contact contact)
     {
-        
+        MainViewModel.UpdateContacts(contact);
     }
-    public void Delete(EditContactViewModel contact)
+
+    public async void Delete(EditContactViewModel contact)
     {
+        if (!await MainViewModel.DeleteContact(contact.UserId))
+        {
+            return;
+        }
         Contacts.Remove(Contacts[Contacts.IndexOf(contact)]);
-        MainViewModel.DeleteContact(contact.UserId);
     }
-    
 
 
     public ObservableCollection<EditContactViewModel> Contacts

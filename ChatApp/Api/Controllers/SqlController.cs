@@ -9,7 +9,8 @@ namespace Api.Controllers;
 [Route("[controller]")]
 public class SqlController : ControllerBase
 {
-    private const string ConnectionString = "Server=DESKTOP-L7HGMAF;Database=ChatApp;Trusted_Connection=True;";
+    private const string ConnectionString =
+        @"Server=MAFBNB0343\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
 
     [HttpPost("AddUser")]
     public void AddUser(AccUser accUser)
@@ -33,14 +34,102 @@ public class SqlController : ControllerBase
                   $" (UserId, ChatId, Content, Time) values " +
                   $"('{message.UserId}','{message.ChatId}','{message.Content}','{message.Time}')");
     }
-
-    [HttpPost("CreateChat")]
-    public void CreateChat(Chat chat)
+    
+    [HttpPost("CreateContact")]
+    public async Task<Contact> CreateContact(string userId, string contactId)
     {
+        string username;
+        Contact contact;
+        try
+        {
+            var con = new SqlConnection(ConnectionString);
+            con.Open();
+            username = con.Query<string>($"Select Username from AccUser where UserId = '{contactId}'").ToArray()[0];
+             con.Query($"Insert into Contact (ContactId, UserId , LastMessage , LastMessageTime ,ContactUsername) values " +
+                                          $"('{contactId}', '{userId}', ' ' ,'00:00:00.00' ,'{username}')");
+             contact = con.Query<Contact>($"Select * from Contact Where ContactId = '{contactId}'").ToArray()[0];
+            con.Close();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new Contact();
+        }
+        return contact;
+    }
+    
+    [HttpPost("CreateAcc")]
+    public async Task<AccUser> CreateAcc(string username, string password)
+    {
+        try
+        {
+            string userId;
+            IEnumerable<int> count;
+            var con = new SqlConnection(ConnectionString);
+            con.Open();
+            do
+            {
+                userId = RandomString();
+                count = con.Query<int>($"Select COUNT(*) from AccUser where UserId = '{userId}'");
+            } while (count.ToArray()[0] > 0);
+
+            con.Query("Insert Into AccUser (UserId ,Username ,Password)" +
+                      $"VALUES ('{userId}','{username}','{password}')");
+            var account = con.Query<AccUser>($"Select * from AccUser where UserId = '{userId}'");
+            con.Close();
+            return account.ToList()[0];
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new AccUser();
+        }
+    }
+    
+    [HttpGet("CreateChat")]
+    public Chat CreateChat(string userId, string contactId)
+    {
+        var chatId = RandomString();
+        int count;
+        do
+        {
+            var con = new SqlConnection(ConnectionString);
+            con.Open();
+            count =  con.Query<int>($"Select Count(*) from Chat where ChatId = '{chatId}'").ToArray()[0];
+        } while (count != 0);
+        var chat = new Chat
+        {
+            UserId = userId,
+            ContactId = contactId,
+            ChatId = chatId
+        };
         InsertSql(
             $"insert into Chat (ChatId , UserId, ContactId) values ('{chat.ChatId}' ,'{chat.UserId}' , '{chat.ContactId}')");
+        
+        return chat;
     }
 
+    [HttpGet("ControlCreateUsername")]
+    public async Task<bool> ControlCreateUsername(string username)
+    {
+        try
+        {
+            IEnumerable<int> count;
+            var con = new SqlConnection(ConnectionString);
+            con.Open();
+            count = con.Query<int>(
+                $"Select COUNT(*) from AccUser where Username = '{username}'");
+
+            con.Close();
+            return count.ToArray()[0] == 0;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return false;
+        }
+    }
+    
     [HttpGet("GetAcc")]
     public async Task<AccUser> GetAcc(string username, string password)
     {
@@ -49,17 +138,19 @@ public class SqlController : ControllerBase
         {
             var con = new SqlConnection(ConnectionString);
             con.Open();
-            user = con.Query<AccUser>($"Select * from AccUser where Username = '{username}' and Password = '{password}' ");
+            user = con.Query<AccUser>(
+                $"Select * from AccUser where Username = '{username}' and Password = '{password}' ");
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
         }
+
         return user.ToList()[0];
     }
 
-    [HttpGet("GetContacts")]
-    public async Task<List<Contact>> GetContacts(string userId)
+    [HttpGet("GetUserContacts")]
+    public async Task<List<Contact>> GetUserContacts(string userId)
     {
         IEnumerable<Contact> contacts = new List<Contact>();
         try
@@ -123,8 +214,11 @@ public class SqlController : ControllerBase
     public void DeleteMessages(string chatId, string userId)
     {
         InsertSql($"Delete Message where ChatId = '{chatId}' and UserId = '{userId}'");
-        InsertSql($"Delete Chat where ChatId = '{chatId}'");
+        if (true /*Check if ChatId Is used when not DeleteChat*/)
+        {
+        }
     }
+
 
     [HttpDelete("DeleteAcc")]
     public void DeleteAcc(string username, string password)
@@ -132,58 +226,7 @@ public class SqlController : ControllerBase
         InsertSql($"Delete UserAcc where Username = '{username}' and Password = '{password}'");
     }
 
-    [HttpPost("CreateAcc")]
-    public async Task<AccUser> CreateAcc(string username, string password)
-    {
-        try
-        {
-            string userId;
-            IEnumerable<int> count;
-            var con = new SqlConnection(ConnectionString);
-            con.Open();
-            do
-            {
-                userId = RandomString();
-                count = con.Query<int>($"Select COUNT(*) from AccUser where UserId = '{userId}'");
-            } while (count.ToArray()[0] > 0);
-
-            con.Query("Insert Into AccUser (UserId ,Username ,Password)" +
-                      $"VALUES ('{userId}','{username}','{password}')");
-            var account = con.Query<AccUser>($"Select * from AccUser where UserId = '{userId}'");
-            con.Close();
-            return account.ToList()[0];
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return new AccUser();
-        }
-        
-    }
-
-    [HttpGet("ControlCreate")]
-    public async Task<bool> ControlCreate(string username)
-    {
-        try
-        {
-            IEnumerable<int> count;
-            var con = new SqlConnection(ConnectionString);
-            con.Open();
-            count = con.Query<int>(
-                $"Select COUNT(*) from AccUser where Username = '{username}'");
-            
-            con.Close();
-            return count.ToArray()[0] == 0;
-
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return false;
-        }
-    }
-
-
+ 
     private string RandomString()
     {
         var random = new Random();
@@ -196,7 +239,6 @@ public class SqlController : ControllerBase
         } while (false);
 
         return userId;
-        //check if UserId Already in use 
     }
 
 
