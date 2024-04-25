@@ -2,7 +2,6 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Style x:Key="Button" TargetType="Button">
         <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="Width" Value="300" />
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontFamily" Value="{StaticResource SwIsop1}" />
         <Setter Property="BorderBrush" Value="GhostWhite" />
@@ -28,7 +27,6 @@
     <Style TargetType="TextBox" x:Key="Input">
         <Setter Property="FontSize" Value="15" />
         <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="Width" Value="300" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="#19232e" />
         <Setter Property="Foreground" Value="White" />
@@ -40,7 +38,6 @@
     <Style TargetType="TextBlock" x:Key="InputWatermark">
         <Setter Property="FontSize" Value="15" />
         <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="Width" Value="300" />
         <Setter Property="Background" Value="#243342" />
         <Setter Property="Foreground" Value="White" />
         <Setter Property="Opacity" Value="0.5"/>
