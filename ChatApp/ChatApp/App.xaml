@@ -6,7 +6,33 @@
     <Application.Resources>
         <FontFamily x:Key="SwIsop1">/ChatApp;component/Assets/SWIsop1.ttf#SWIsop1</FontFamily>
         <FontFamily x:Key="SwLink">/ChatApp;component/Assets/SWLink.ttf#SWLink</FontFamily>
-
-
+        
+     
+         <Style x:Key="StandardButton" TargetType="Button">
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontFamily" Value="{StaticResource SwIsop1}" />
+        <Setter Property="BorderBrush" Value="GhostWhite" />
+        <Setter Property="Background" Value="#b700ff "/>
+        <Setter Property="Foreground" Value="GhostWhite" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="1.5" CornerRadius="13">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#9702d1"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+        
+        
     </Application.Resources>
 </Application>
