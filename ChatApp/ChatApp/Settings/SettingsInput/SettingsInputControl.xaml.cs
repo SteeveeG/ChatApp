@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using ChatApp.ApiHandler;
 
 namespace ChatApp.Settings.SettingsInput;
 
@@ -35,5 +36,25 @@ public partial class SettingsInputControl : UserControl
     {
         watermark.Visibility = visibility;
         textBox.Background = color;
+    }
+
+    private async void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.Label.Contains("Log Out"))
+        {
+            var loginregister = new LoginRegisterMenu.LoginRegisterMenu();
+            loginregister.Show();
+            var parentWindow = Window.GetWindow(this);
+            parentWindow.Close();
+        }
+        else if (ViewModel.Label.Contains("Account"))
+        {
+            if (await ViewModel.DeletFunc())
+            {
+                var parentWindow = Window.GetWindow(this);
+                parentWindow.Close(); 
+            }
+        }
+        
     }
 }

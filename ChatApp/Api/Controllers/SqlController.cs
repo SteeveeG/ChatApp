@@ -2,16 +2,21 @@ using System.Data.SqlClient;
  using Dapper;
  using Library.Model;
  using Microsoft.AspNetCore.Mvc;
- 
+
  namespace Api.Controllers;
  
  [ApiController]
  [Route("[controller]")]
  public class SqlController : ControllerBase
  {
-     private const string ConnectionString =
-         @"Server=MAFBNB0343\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
+     private string connectionString;
+     public SqlController()
+     {
+         GetLocalHost();
+     }
  
+     
+     
      [HttpPost("AddUser")]
      public async void AddUser(AccUser accUser)
      {
@@ -42,7 +47,7 @@ using System.Data.SqlClient;
          Contact contact;
          try
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              username = con.Query<string>($"Select Username from AccUser where UserId = '{contactId}'").ToArray()[0];
              con.Query(
@@ -69,7 +74,7 @@ using System.Data.SqlClient;
          {
              string userId;
              IEnumerable<int> count;
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              do
              {
@@ -96,7 +101,7 @@ using System.Data.SqlClient;
          int count;
          try
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              count = con.Query<int>($"Select Count(*) from AccUser where Username = '{newusername}'").ToArray()[0];
              if (count != 0)
@@ -119,7 +124,7 @@ using System.Data.SqlClient;
      {
          try
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              con.Query($"UPDATE AccUser SET Password = '{password}' WHERE UserId = '{userId}'");
              con.Close();
@@ -140,7 +145,7 @@ using System.Data.SqlClient;
          int count;
          do
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              count = con.Query<int>($"Select Count(*) from Chat where ChatId = '{chatId}'").ToArray()[0];
              con.Close();
@@ -164,7 +169,7 @@ using System.Data.SqlClient;
          try
          {
              IEnumerable<int> count;
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              count = con.Query<int>(
                  $"Select COUNT(*) from AccUser where Username = '{username}'");
@@ -185,7 +190,7 @@ using System.Data.SqlClient;
          IEnumerable<AccUser> user = new List<AccUser>();
          try
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              user = con.Query<AccUser>(
                  $"Select * from AccUser where Username = '{username}' and Password = '{password}' ");
@@ -205,7 +210,7 @@ using System.Data.SqlClient;
          IEnumerable<Contact> contacts = new List<Contact>();
          try
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              contacts = con.Query<Contact>($"Select * from Contact where UserId = '{userId}'");
              con.Close();
@@ -224,7 +229,7 @@ using System.Data.SqlClient;
          IEnumerable<Chat> chat = new List<Chat>();
          try
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              chat = con.Query<Chat>($"Select * from Chat where UserId = '{userId}' and ContactId = '{contactId}' ");
              con.Close();
@@ -243,7 +248,7 @@ using System.Data.SqlClient;
          IEnumerable<Message> messages = new List<Message>();
          try
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              messages = con.Query<Message>($"Select * from Message where ChatId = '{chatId}' ");
              con.Close();
@@ -264,17 +269,81 @@ using System.Data.SqlClient;
              var chat = await GetChat(userId, contactId);
              DeleteMessages(chat.ChatId , userId);
              DeleteMessages(chat.ChatId , contactId);
+             OwnDeleteUserAcc(contactId);
          }
          await InsertSql($"Delete Contact where ContactId = '{contactId}' and UserId='{userId}'");
  
      }
+
+     
+
+
+     [HttpDelete("DeleteMessages")]
+     public async void DeleteMessages(string chatId, string userId)
+     {
+         await InsertSql($"Delete Message where ChatId = '{chatId}' and UserId = '{userId}'");
+         await InsertSql($"Delete Chat where ChatId = '{chatId}'");
+     }
+
+
+     [HttpDelete("DeleteAllContactsFromUser")]
+     public async Task<bool> DeleteAllContactsFromUser(string userId)
+     {
+        return await InsertSql($"Delete Contact where UserId='{userId}'");
+     }
+     
+     [HttpDelete("OwnDeleteAcc")]
+     public async Task<bool> OwnDeleteAcc(string userId)
+     {
+         //todo : Clean This Mess :( 
+       // var result1 = await DeleteAllContactsFromUser(userId);
+        var result2 = await InsertSql($"UPDATE AccUser SET Username = 'Account Deleted', Password='Account Deleted' WHERE UserId = '{userId}'");
+        var contacts = await GetUserContacts(userId);
+        foreach (var contact in contacts)
+        {
+             DeleteContact(contact.ContactId , userId);
+        }
+        return result2; 
+     }
+     private string RandomString()
+     {
+         var random = new Random(); 
+         string userId;
+         do
+         {
+             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+             userId = new string(Enumerable.Repeat(chars, 45)
+                 .Select(s => s[random.Next(s.Length)]).ToArray());
+         } while (false);
  
+         return userId;
+     }
+     private async Task<bool> InsertSql(string sql)
+     {
+         try
+         {
+             var con = new SqlConnection(connectionString);
+             con.Open();
+             await con.QueryAsync(sql);
+             con.Close();
+             return true;
+         }
+         catch (Exception e)
+         {
+             Console.WriteLine(e);
+             return false;
+         }
+     }
+     private async void OwnDeleteUserAcc(string contactId)
+     {
+         await InsertSql($"Delete UserAcc where UserId = '{contactId}'");
+     }
      private async Task<bool> CheckIfContactUsed(string userId, string contactId)
      {
          int count;
          try
          {
-             var con = new SqlConnection(ConnectionString);
+             var con = new SqlConnection(connectionString);
              con.Open();
              count = con.Query<int>(
                  $"Select Count(*) from Contact where ContactId = '{userId}' and UserId = '{contactId}'").ToArray()[0];
@@ -288,49 +357,11 @@ using System.Data.SqlClient;
  
          return count > 1;
      }
- 
-     [HttpDelete("DeleteMessages")]
-     public async void DeleteMessages(string chatId, string userId)
+     private void GetLocalHost()
      {
-         await InsertSql($"Delete Message where ChatId = '{chatId}' and UserId = '{userId}'");
-         await InsertSql($"Delete Chat where ChatId = '{chatId}'");
+         var myServer = Environment.MachineName;
+         connectionString = @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
      }
- 
- 
-     [HttpDelete("DeleteAcc")]
-     public async void DeleteAcc(string username, string password)
-     {
-         await InsertSql($"Delete UserAcc where Username = '{username}' and Password = '{password}'");
-     }
- 
- 
-     private string RandomString()
-     {
-         var random = new Random();
-         string userId;
-         do
-         {
-             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-             userId = new string(Enumerable.Repeat(chars, 45)
-                 .Select(s => s[random.Next(s.Length)]).ToArray());
-         } while (false);
- 
-         return userId;
-     }
- 
- 
-     private async Task InsertSql(string sql)
-     {
-         try
-         {
-             var con = new SqlConnection(ConnectionString);
-             con.Open();
-             await con.QueryAsync(sql);
-             con.Close();
-         }
-         catch (Exception e)
-         {
-             Console.WriteLine(e);
-         }
-     }
+
+
  }

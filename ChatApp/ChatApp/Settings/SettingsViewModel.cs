@@ -4,33 +4,40 @@ using System.Windows;
 using System.Windows.Controls;
 using ChatApp.ApiHandler;
 using ChatApp.Settings.SettingsInput;
+using Library.Model;
 
 namespace ChatApp.Settings;
 
 public class SettingsViewModel : ViewModelBase
 {
+    private AccUser accUser;
+    private MainViewModel mainViewModel;
     public SettingsInputViewModel NewNameSettingsInputViewModel { get; set; }
     public SettingsInputViewModel PbSettingsInputViewModel { get; set; }
     public SettingsInputViewModel AccSettingsInputViewModel { get; set; }
     public SettingsInputViewModel NewPasswordSettingsInputViewModel { get; set; }
     public SettingsInputViewModel LogOutPasswordSettingsInputViewModel { get; set; }
     public DelegateCommand SaveCommand { get; set; }
-    private string userId;
-    private MainViewModel mainViewModel;
 
-    public SettingsViewModel(MainViewModel mainViewModel, string userId = "")
+    public SettingsViewModel(MainViewModel mainViewModel, AccUser acc = null)
     {
         this.mainViewModel = mainViewModel;
-        this.userId = userId;
+        accUser = acc;
         SaveCommand = new DelegateCommand(Save);
         NewNameSettingsInputViewModel = new SettingsInputViewModel("New Name:", "New Name");
         PbSettingsInputViewModel = new SettingsInputViewModel("New Profile Picture:", "Locate Picture",
             new DelegateCommand(ChangeProfilePic));
         AccSettingsInputViewModel =
-            new SettingsInputViewModel("Account:", "Delete Account", new DelegateCommand(DeleteAccount));
+            new SettingsInputViewModel("Account:", "Delete Account", Delete);
         NewPasswordSettingsInputViewModel = new SettingsInputViewModel("New Password:", "New Password");
         LogOutPasswordSettingsInputViewModel =
-            new SettingsInputViewModel("Log Out:", "Log Out", new DelegateCommand(LogOut));
+            new SettingsInputViewModel("Log Out:", "Log Out", new DelegateCommand(null));
+    }
+
+    private async Task<bool> Delete()
+    {
+        var userId = HttpUtility.UrlEncode(accUser.UserId);
+        return await ApiDelete.Delete<bool>($"Sql/OwnDeleteAcc?userId={userId}");
     }
 
 
@@ -39,15 +46,12 @@ public class SettingsViewModel : ViewModelBase
         if (!string.IsNullOrEmpty(NewNameSettingsInputViewModel.NewInput?.Trim()))
         {
             var input = HttpUtility.UrlEncode(NewNameSettingsInputViewModel.NewInput);
-            var result = await ApiPost.Post<bool>($"Sql/ChangeUsername?newusername={input}&userId={userId}",
+            var result = await ApiPost.Post<bool>($"Sql/ChangeUsername?newusername={input}&userId={accUser.UserId}",
                 new StringContent(""));
             if (result)
             {
                 mainViewModel.NewName(NewNameSettingsInputViewModel.NewInput);
                 NewNameSettingsInputViewModel.NewInput = string.Empty;
-            }
-            else
-            {
             }
         }
 
@@ -63,8 +67,9 @@ public class SettingsViewModel : ViewModelBase
             {
                 return;
             }
+
             var input = HttpUtility.UrlEncode(NewPasswordSettingsInputViewModel.NewInput);
-            var result = await ApiPost.Post<bool>($"Sql/ChangePassword?userId={userId}&password={input}",
+            var result = await ApiPost.Post<bool>($"Sql/ChangePassword?userId={accUser.UserId}&password={input}",
                 new StringContent(""));
             if (result)
             {
@@ -77,14 +82,6 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-
-    private void LogOut()
-    {
-    }
-
-    private void DeleteAccount()
-    {
-    }
 
     public void ChangeProfilePic()
     {

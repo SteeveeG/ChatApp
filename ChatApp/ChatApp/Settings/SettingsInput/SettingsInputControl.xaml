@@ -39,7 +39,8 @@
                 Style="{StaticResource Button}"
                 Content="{Binding ButtonContent}"
                 Visibility="{Binding IsButtonInput,
-                 Converter={StaticResource BoolToVisibilityConverter}}" />
+                 Converter={StaticResource BoolToVisibilityConverter}}" 
+                Click="ButtonBase_OnClick"/>
         
     </Grid>
 </UserControl>

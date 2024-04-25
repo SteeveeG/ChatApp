@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Web;
 using ChatApp.ApiHandler;
 using ChatApp.Chat;
+using ChatApp.Chat.Messages;
 using ChatApp.ChatList;
 using ChatApp.ChatList.ChatListItem;
 using ChatApp.Contact;
@@ -20,6 +21,8 @@ public class MainViewModel : ViewModelBase
     private List<Library.Model.Contact> contacts;
     private AccUser user;
     private List<List<Message>> messages;
+    private int curentChatIndex;
+    private string CurrentChatId;
     public HomeNavbarViewModel HomeNavbarViewModel { get; set; }
     public ChatListViewModel ChatListViewModel { get; set; }
     public ChatViewModel ChatViewModel { get; set; }
@@ -27,7 +30,6 @@ public class MainViewModel : ViewModelBase
     public ContactViewModel ContactViewModel { get; set; }
     public Func<int, List<Message>> GetMessage { get; set; }
     public Func<string, Task<string>> GetChatIdFunc { get; set; }
-
     public MainViewModel()
     {
         /*Init MainViewModel*/
@@ -45,12 +47,24 @@ public class MainViewModel : ViewModelBase
         GetMessage = GetMessages;
         Messages = new List<List<Message>>();
         user = acc;
-        ChatViewModel = new ChatViewModel(acc);
+        ChatViewModel = new ChatViewModel(SetMessage ,acc);
         ChatListViewModel = new ChatListViewModel(ChatViewModel, acc.UserId, GetMessage, GetChatIdFunc);
         HomeNavbarViewModel = new HomeNavbarViewModel();
-        SettingsViewModel = new SettingsViewModel(this,acc.UserId);
+        SettingsViewModel = new SettingsViewModel(this,acc);
         ContactViewModel = new ContactViewModel(this, acc);
+        curentChatIndex = 0;
         GetContacts();
+    }
+
+    private void SetMessage(MessageViewModel message)
+    {
+        Messages[curentChatIndex].Add(new Message()
+        {
+            ChatId = CurrentChatId,
+            Content = message.Message,
+            Time = DateTime.Now
+            
+        });
     }
 
     private async Task<string> GetChatId(string ContactId)
@@ -61,6 +75,7 @@ public class MainViewModel : ViewModelBase
 
     private List<Message> GetMessages(int index)
     {
+        curentChatIndex = index;
         return Messages[index];
     }
 

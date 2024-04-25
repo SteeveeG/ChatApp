@@ -4,15 +4,14 @@ public class EditContactViewModel : ViewModelBase
 {
     private string userId;
     private string name;
-
     public Action<EditContactViewModel> Action { get; set; }
+    public string UserIdView => $"User-Id: {UserId}";
     public EditContactViewModel(string name,string userId , Action<EditContactViewModel> action)
     {
         UserId = userId;
         Name = name;
         Action = action;
     }
-    public string UserIdView => $"User-Id: {UserId}";
     public string UserId
     {
         get => userId;

@@ -9,9 +9,10 @@ public class SettingsInputViewModel : ViewModelBase
     private string waterMark;
     private bool isChanged;
     public DelegateCommand DelegateCommand { get; set; }
+    public Func<Task<bool>>? DeletFunc { get; set; }
 
 
-    public SettingsInputViewModel(string label, string waterMark  )
+    public SettingsInputViewModel(string label, string waterMark)
     {
         Label = label;
         IsTextInput = true;
@@ -19,13 +20,22 @@ public class SettingsInputViewModel : ViewModelBase
 
     }
 
-    public SettingsInputViewModel(string label, string buttonContent, DelegateCommand delegateCommand)
+    public SettingsInputViewModel(string label, string buttonContent, DelegateCommand delegateCommand = null)
     {
         Label = label;
         IsTextInput = false;
         DelegateCommand = delegateCommand;
         ButtonContent = buttonContent;
     }
+
+    public SettingsInputViewModel(string label, string buttonContent, Func<Task<bool>> DeletFunc = null)
+    {
+        Label = label;
+        IsTextInput = false;
+        this.DeletFunc = DeletFunc;
+        ButtonContent = buttonContent;
+    }
+    
 
     public string Label
     {
