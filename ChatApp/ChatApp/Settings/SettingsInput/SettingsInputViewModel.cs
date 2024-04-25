@@ -64,7 +64,7 @@ public class SettingsInputViewModel : ViewModelBase
         }
     }
 
-    public string NewInput
+    public string? NewInput
     {
         get => newInput;
         set

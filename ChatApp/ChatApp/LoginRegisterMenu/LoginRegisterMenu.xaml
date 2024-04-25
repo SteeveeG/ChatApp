@@ -41,13 +41,16 @@
       
         <loginControl:LoginControl Grid.Column="0" Grid.Row="1"  
                             ViewModel="{Binding LoginViewModel}"/>
-        <Button Grid.Column="0" Grid.Row="2"  Style="{StaticResource LoginRegisterButton}" Content="Login"
+        <Button Grid.Column="0" Grid.Row="2"  Style="{StaticResource StandardButton}" 
+                Width="300" Content="Login"
                                Click="LogIn"  />
           
         <registerControl:RegisterControl Grid.Column="1" Grid.Row="1"
                                   ViewModel="{Binding RegisterViewModel}"/>
         
         <Button Grid.Column="1" Grid.Row="2" 
-                Style="{StaticResource LoginRegisterButton }" Content="Register" Click="Register"/>  
+                Style="{StaticResource StandardButton }"
+                Width="300"
+                Content="Register" Click="Register"/>  
     </Grid>
 </Window>

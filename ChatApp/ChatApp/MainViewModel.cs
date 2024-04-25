@@ -35,7 +35,7 @@ public class MainViewModel : ViewModelBase
         ChatViewModel = new ChatViewModel();
         ChatListViewModel = new ChatListViewModel(ChatViewModel);
         HomeNavbarViewModel = new HomeNavbarViewModel();
-        SettingsViewModel = new SettingsViewModel();
+        SettingsViewModel = new SettingsViewModel(this);
         ContactViewModel = new ContactViewModel(this);
     }
 
@@ -48,7 +48,7 @@ public class MainViewModel : ViewModelBase
         ChatViewModel = new ChatViewModel(acc);
         ChatListViewModel = new ChatListViewModel(ChatViewModel, acc.UserId, GetMessage, GetChatIdFunc);
         HomeNavbarViewModel = new HomeNavbarViewModel();
-        SettingsViewModel = new SettingsViewModel(acc.UserId);
+        SettingsViewModel = new SettingsViewModel(this,acc.UserId);
         ContactViewModel = new ContactViewModel(this, acc);
         GetContacts();
     }
@@ -66,15 +66,15 @@ public class MainViewModel : ViewModelBase
 
     public async Task<bool> DeleteContact(string contactId)
     {
-        var chatid = await GetChatId(contactId);
+        contactId = HttpUtility.UrlEncode(contactId);
+        var convertedUserId = HttpUtility.UrlEncode(user.UserId);
         using var client = new HttpClient();
         client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         try
         {
-            await client.DeleteAsync($"Sql/DeleteMessages?chatId={chatid}&userId={contactId}");
-            await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}");
+            await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}&userId={convertedUserId}");
         }
         catch
         {
@@ -135,6 +135,13 @@ public class MainViewModel : ViewModelBase
         await ApiGet.GetApiIn<Library.Model.Chat>($"Sql/CreateChat?userId={convertedUserId}&contactId={convertedContactId}");
     }
 
+    public void NewName(string newUsername)
+    {
+        ContactViewModel.OwnUsername = newUsername;
+    }
+    
+    
+    
     public List<List<Message>> Messages
     {
         get => messages;

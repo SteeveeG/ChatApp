@@ -12,14 +12,14 @@ public class EditContactViewModel : ViewModelBase
         Name = name;
         Action = action;
     }
-    
+    public string UserIdView => $"User-Id: {UserId}";
     public string UserId
     {
         get => userId;
         set
         {
             if (value == userId) return;
-            userId = $"User-Id: {value}";
+            userId = value;
             OnPropertyChanged();
         }
     }

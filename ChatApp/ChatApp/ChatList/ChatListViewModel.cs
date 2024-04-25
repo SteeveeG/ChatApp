@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using ChatApp.Chat;
 using ChatApp.Chat.Messages;
 using ChatApp.ChatList.ChatListItem;
+using ChatApp.Contact.EditContact;
 using Library.Model;
 
 namespace ChatApp.ChatList;
@@ -46,7 +47,16 @@ public class ChatListViewModel : ViewModelBase
             ChatViewModel.Messages.Add(new MessageViewModel(message.Content, userId == message.UserId));
         }
     }
-    
+    public void RemoveContact(EditContactViewModel contact)
+    {
+        for (var i = 0; i < list.Count; i++)
+        {
+            if (list[i].ContactId == contact.UserId)
+            {
+                list.RemoveAt(i);
+            }
+        }
+    }
     public ObservableCollection<ChatListItemViewModel> List
     {
         get => list;

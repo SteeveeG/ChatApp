@@ -38,6 +38,12 @@ public
             Messages.Add(new MessageViewModel(message.Content, true));
         }
     }
+    public void ClearFont()
+    {
+        Messages.Clear();
+        HeaderViewModel.Name = string.Empty;
+    }
+    
     public ObservableCollection<MessageViewModel> Messages
     {
         get => messages;

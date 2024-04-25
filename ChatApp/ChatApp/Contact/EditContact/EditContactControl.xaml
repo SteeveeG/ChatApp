@@ -16,7 +16,7 @@
         <StackPanel Grid.Column="0" Orientation="Horizontal">
             <Label Content="{Binding Name}" VerticalAlignment="Center" Margin="10,0"
                    Foreground="GhostWhite" FontFamily="{StaticResource SwIsop1}" FontSize="20" />
-            <Label Content="{Binding UserId}" VerticalAlignment="Center" Margin="10,0"
+            <Label Content="{Binding UserIdView}" VerticalAlignment="Center" Margin="10,0"
                    Foreground="GhostWhite" FontFamily="{StaticResource SwIsop1}" FontSize="15" Opacity="0.7" />
         </StackPanel>
         <Button Grid.Column="1" Style="{StaticResource TransparentButton}"

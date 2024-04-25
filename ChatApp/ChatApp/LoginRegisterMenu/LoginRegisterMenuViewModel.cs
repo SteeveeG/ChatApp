@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ChatApp.ApiHandler;
+using ChatApp.CustomMessageBox;
 using ChatApp.LoginRegisterMenu.LoginControl;
 using ChatApp.LoginRegisterMenu.RegisterControl;
 using Library.Model;
@@ -19,18 +20,26 @@ public class LoginRegisterMenuViewModel : ViewModelBase
         LoginViewModel = new LoginViewModel();
         RegisterViewModel = new RegisterViewModel();
     }
-    
+
     public async Task<bool> ControlRegister()
     {
-        var result = await ControlCreate(RegisterViewModel.Name);
+        var result = await ControlCreateUsername(RegisterViewModel.Name);
         if (!result)
         {
             RegisterViewModel.RegisterFailed();
             return false;
         }
-        RegisterViewModel.RegisterSucceeded();
-        return true;
+
+        var tupleResult = PasswordValidator.ValidatePassword(RegisterViewModel.Password);
+        if (tupleResult.Item1)
+        {
+            RegisterViewModel.RegisterSucceeded();
+            return true;
+        }
+        CustomMessageBoxHandler.Create($"{tupleResult.Item2}");
+        return false;
     }
+
     public async Task<AccUser> ControlLogin()
     {
         var user = await Login(LoginViewModel.Name, LoginViewModel.Password);
@@ -43,12 +52,14 @@ public class LoginRegisterMenuViewModel : ViewModelBase
         LoginViewModel.LoginSucceeded();
         return user;
     }
-    
+
     public async Task<AccUser> Create(string username, string password)
     {
-        return await ApiPost.Post<AccUser>($"Sql/CreateAcc?username={username}&password={password}",new StringContent(""));
+        return await ApiPost.Post<AccUser>($"Sql/CreateAcc?username={username}&password={password}",
+            new StringContent(""));
     }
-    private async Task<bool> ControlCreate(string username)
+
+    private async Task<bool> ControlCreateUsername(string username)
     {
         return await ApiGet.GetApiIn<bool>($"Sql/ControlCreateUsername?username={username}");
     }

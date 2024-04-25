@@ -5,10 +5,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:newContact="clr-namespace:ChatApp.Contact.NewContact"
         mc:Ignorable="d"  Background="#2d3e50"   Name="Control"
-        MouseLeftButtonDown="Move"
+        MouseLeftButtonDown="Move"  SizeToContent="Width"
         BorderBrush="GhostWhite" BorderThickness="1"
-        AllowsTransparency="True" WindowStyle="None" ResizeMode="NoResize"
-        Title="NewContact" Height="350" Width="400">
+        AllowsTransparency="True" WindowStyle="None" ResizeMode="CanResizeWithGrip"
+        Title="NewContact" Height="350" MinWidth="400" >
     <Window.Resources>
         <ResourceDictionary Source="../ContactDictionary.xaml"/>
     </Window.Resources>
@@ -26,14 +26,15 @@
         <Label Content="New Contact" FontSize="35" Foreground="GhostWhite" FontFamily="{StaticResource SwLink}"
                HorizontalAlignment="Center" Margin="0,10,0,70"/>
        
-       <Grid Margin="0,0,0,50">
-           <TextBlock Text=" User-Id" Name="UserIdWatermark"  
+       <Grid Margin="0,0,0,50"> 
+           <TextBlock Text=" User-Id" Name="UserIdWatermark"          MinWidth="300"
                       Style="{StaticResource InputWatermark}"/>
-           <TextBox Name="UserId" Style="{StaticResource Input}"
-                    TextChanged="RemoveAddWatermark" 
+           <TextBox Name="UserId" Style="{StaticResource  Input}"
+                    TextChanged="RemoveAddWatermark"         MinWidth="300"
                     Text="{Binding NewContactId}"  />
        </Grid>
-       <Button Style="{StaticResource Button}" Content="Add Contact"
+       <Button Style="{StaticResource Button}" Content="Add Contact" HorizontalContentAlignment="Stretch"
+               MinWidth="300"
                Command="{Binding AddNewContactCommand}"/>
    </StackPanel>
 </Window>

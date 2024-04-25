@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
+using ChatApp.CustomMessageBox;
 
 namespace ChatApp.LoginRegisterMenu.RegisterControl;
 
@@ -28,7 +29,7 @@ public class RegisterViewModel : ViewModelBase
 
     public void RegisterFailed()
     {
-        MessageBox.Show("UserName Already in Use");
+        CustomMessageBoxHandler.Create("Username Already in Use");
         TextboxBorderColor = Brushes.Red;
         ForeGroundColor = Brushes.Red;
     }
