@@ -31,7 +31,7 @@ public class SettingsViewModel : ViewModelBase
             new SettingsInputViewModel("Account:", "Delete Account", Delete);
         NewPasswordSettingsInputViewModel = new SettingsInputViewModel("New Password:", "New Password");
         LogOutPasswordSettingsInputViewModel =
-            new SettingsInputViewModel("Log Out:", "Log Out", new DelegateCommand(null));
+            new SettingsInputViewModel("Log Out:", "Log Out",  new DelegateCommand(() => Console.WriteLine()));
     }
 
     private async Task<bool> Delete()

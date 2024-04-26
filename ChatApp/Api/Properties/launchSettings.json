@@ -26,6 +26,17 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
+    },
+    "APIgRPC": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "applicationUrl": "https://localhost:7049;https://localhost:7227",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+
+      }
     }
   }
 }

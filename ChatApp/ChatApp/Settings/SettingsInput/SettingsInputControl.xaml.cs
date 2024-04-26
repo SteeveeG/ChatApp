@@ -52,9 +52,8 @@ public partial class SettingsInputControl : UserControl
             if (await ViewModel.DeletFunc())
             {
                 var parentWindow = Window.GetWindow(this);
-                parentWindow.Close(); 
+                parentWindow.Close();
             }
         }
-        
     }
 }

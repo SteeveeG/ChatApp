@@ -14,7 +14,7 @@ public class ChatListItemViewModel : ViewModelBase
         Name = contact.ContactUsername;
         LastMessage =  contact.LastMessage;
         LastMessageTime =  contact.LastMessageTime;
-        ContactId =  contact.ContactId;
+        ContactId =  contact.UserId;
     }
 
 

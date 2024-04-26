@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.WebSockets;
 using System.Web;
 using ChatApp.ApiHandler;
 using ChatApp.Chat;
@@ -54,22 +55,41 @@ public class MainViewModel : ViewModelBase
         ContactViewModel = new ContactViewModel(this, acc);
         curentChatIndex = 0;
         GetContacts();
+        ConnectToGrpc();
     }
 
+    private void ConnectToGrpc()
+    {
+        Task.Run(async () =>
+        { 
+            await Task.Run(() =>  Library.GrpcHandler.GrpcHandler.OpenStream(SetNewInput));
+        });
+    }
+
+    private void SetNewInput(string json)
+    {
+        
+    }
+    
     private void SetMessage(MessageViewModel message)
     {
-        Messages[curentChatIndex].Add(new Message()
+        var time = DateTime.Now;
+        Messages[curentChatIndex].Add(new Message
         {
             ChatId = CurrentChatId,
             Content = message.Message,
-            Time = DateTime.Now
-            
+            Time = time,
+            UserId = user.UserId
         });
+        ChatListViewModel.List[curentChatIndex].LastMessage = message.Message;
+        ChatListViewModel.List[curentChatIndex].LastMessageTime = time;
+
     }
 
     private async Task<string> GetChatId(string ContactId)
     {
         var chatId = await GetChatId(ContactId, user.UserId);
+        CurrentChatId = chatId;
         return chatId;
     }
 
@@ -121,9 +141,9 @@ public class MainViewModel : ViewModelBase
         foreach (var contact in Contacts)
         {
             ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel));
-            ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.ContactId,
+            ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.UserId,
                 ContactViewModel.Delete));
-            var chatId = await GetChatId(contact.ContactId, user.UserId);
+            var chatId = await GetChatId(contact.UserId, user.UserId);
             //Todo Returns Null 
             await AddChatMessages(chatId);
         }
@@ -134,19 +154,19 @@ public class MainViewModel : ViewModelBase
     {
         await ControlCreateChatId(contact);
         ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel));
-        ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.ContactId,
+        ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.UserId,
             ContactViewModel.Delete));
         Messages.Add(new List<Message>());
     }
 
     private async Task ControlCreateChatId(Library.Model.Contact contact)
     {
-        if (await GetChatId(contact.ContactId) != null)
+        if (await GetChatId(contact.UserId) != null)
         {
             return;
         }
-        var convertedUserId = HttpUtility.UrlEncode(contact.UserId);
-        var convertedContactId = HttpUtility.UrlEncode(contact.ContactId);
+        var convertedUserId = HttpUtility.UrlEncode(contact.CreatedContactUserId);
+        var convertedContactId = HttpUtility.UrlEncode(contact.UserId);
         await ApiGet.GetApiIn<Library.Model.Chat>($"Sql/CreateChat?userId={convertedUserId}&contactId={convertedContactId}");
     }
 

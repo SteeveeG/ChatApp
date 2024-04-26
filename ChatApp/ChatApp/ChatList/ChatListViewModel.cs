@@ -42,6 +42,7 @@ public class ChatListViewModel : ViewModelBase
             return;
         }
 
+        ChatViewModel.TextBoxViewModel.Message = string.Empty;
         foreach (var message in messages)
         {
             ChatViewModel.Messages.Add(new MessageViewModel(message.Content, userId == message.UserId));

@@ -20,11 +20,11 @@ public class SettingsInputViewModel : ViewModelBase
 
     }
 
-    public SettingsInputViewModel(string label, string buttonContent, DelegateCommand delegateCommand = null)
+    public SettingsInputViewModel(string label, string buttonContent, DelegateCommand delegateCommand)
     {
         Label = label;
         IsTextInput = false;
-        DelegateCommand = delegateCommand;
+        DelegateCommand = delegateCommand ?? new DelegateCommand(() => Console.WriteLine());
         ButtonContent = buttonContent;
     }
 
