@@ -3,8 +3,15 @@ syntax = "proto3";
 option csharp_namespace = "Grpc.Protos";
 
 service ChatService {
-  rpc OpenStream(Request) returns (stream Response) ;
+  rpc OpenStream(Request) returns (stream Response);
 }
+
+
+
+
+
+
+
 
 message Request{
   string UserId = 1;

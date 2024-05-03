@@ -8,6 +8,7 @@ using Library.Model;
 using Library;
 using Request = Grpc.Protos.Request;
 using Response = Grpc.Protos.Response;
+using Type = Library.Enum.Type;
 
 namespace Api.Services
 {
@@ -54,10 +55,40 @@ namespace Api.Services
             ServerCallContext context)
         {
             Subscribe(sqlController);
+
             while (!context.CancellationToken.IsCancellationRequested)
             {
                 if (isChanged)
                 {
+                    switch (subscriber.Type)
+                    {
+                        case Type.Message:
+                            var result = await sqlController.GetChatIds(request.UserId);
+                            var id = result.Find(ids => ids == subscriber.Chat.ChatId);
+                            if (id == null)
+                            {
+                                return;
+                            }
+                            break;
+                        case Type.CreatedChat:
+                            if (request.UserId != subscriber.Chat.UserId)
+                            {
+                                return;
+                            }
+                            break;
+                        case Type.CreatedContact:
+                            if (request.UserId != subscriber.Contact.UserId)
+                            {
+                                return;
+                            }
+                            break;
+                        case Type.DeleteContact:
+                            //not implented
+                            break;
+                        case Type.DeleteAccount:
+                            //not implented
+                            break;
+                    }
                     var subscriberData = JsonSerializer.Serialize(subscriber);
                     await responseStream.WriteAsync(new Response
                     {
@@ -74,8 +105,7 @@ namespace Api.Services
                 Unsubscribe();
             }
         }
-
-
+        
         // public override async Task<msg> ServerReceiveMessage(msg request, ServerCallContext context)
         // {
         //     Message = request;
