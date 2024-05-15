@@ -15,7 +15,8 @@
             <TextBlock Text=" Name" Name="NameWatermark" Style="{StaticResource InputWatermark}"/>
             <TextBox Name="Name" Style="{StaticResource Input}"
                       TextChanged="RemoveAddWatermark"  BorderBrush="{Binding TextboxBorderColor}"
-                      SelectionChanged="OnSelectionChanged"
+                     
+                       GotFocus="OnGotFocus"
                      Text="{Binding Name}"  />
            
         </Grid>
@@ -27,7 +28,8 @@
                      Text="{Binding Password}"
                      BorderBrush="{Binding TextboxBorderColor}"
                      TextChanged="RemoveAddWatermark" 
-                     SelectionChanged="OnSelectionChanged"/>   
+                     GotFocus="OnGotFocus"
+                     />   
         </Grid>
     </StackPanel>
 </UserControl>

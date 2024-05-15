@@ -60,34 +60,9 @@ namespace Api.Services
             {
                 if (isChanged)
                 {
-                    switch (subscriber.Type)
+                    if (!await ControlId(request))
                     {
-                        case Type.Message:
-                            var result = await sqlController.GetChatIds(request.UserId);
-                            var id = result.Find(ids => ids == subscriber.Chat.ChatId);
-                            if (id == null)
-                            {
-                                return;
-                            }
-                            break;
-                        case Type.CreatedChat:
-                            if (request.UserId != subscriber.Chat.UserId)
-                            {
-                                return;
-                            }
-                            break;
-                        case Type.CreatedContact:
-                            if (request.UserId != subscriber.Contact.UserId)
-                            {
-                                return;
-                            }
-                            break;
-                        case Type.DeleteContact:
-                            //not implented
-                            break;
-                        case Type.DeleteAccount:
-                            //not implented
-                            break;
+                        return;
                     }
                     var subscriberData = JsonSerializer.Serialize(subscriber);
                     await responseStream.WriteAsync(new Response
@@ -105,7 +80,42 @@ namespace Api.Services
                 Unsubscribe();
             }
         }
-        
+
+        private async Task<bool> ControlId(Request request)
+        {
+            switch (subscriber.Type)
+            {
+                case Type.Message:
+                    var result = await sqlController.GetChatIds(request.UserId);
+                    var id = result.Find(ids => ids == subscriber.Chat.ChatId);
+                    if (id == null)
+                    {
+                        return false;
+                    }
+                    break;
+                case Type.CreatedChat:
+                    if (request.UserId != subscriber.Chat.UserId)
+                    {
+                        return false;
+                    }
+                    break;
+                case Type.CreatedContact:
+                    if (request.UserId != subscriber.Contact.UserId)
+                    {
+                        return false;
+                    }
+                    break;
+                case Type.DeleteContact:
+                    //not implented
+                    break;
+                case Type.DeleteAccount:
+                    //not implented
+                    break;
+            }
+
+            return true;
+        }
+
         // public override async Task<msg> ServerReceiveMessage(msg request, ServerCallContext context)
         // {
         //     Message = request;

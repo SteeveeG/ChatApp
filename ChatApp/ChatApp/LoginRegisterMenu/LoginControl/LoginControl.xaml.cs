@@ -45,15 +45,16 @@ public partial class LoginControl
         textBox.Background = color;
     }
 
-
-    private void OnSelectionChanged(object sender, RoutedEventArgs e)
-    {
-        SetFocus(Password.IsFocused, Name.IsFocused);
-    }
-
+    
     private void SetFocus(bool passwordValue, bool nameValue)
     {
         ViewModel.PasswordFocused = passwordValue;
         ViewModel.NameFocused = nameValue;
+    }
+
+    
+    private void OnGotFocus(object sender, RoutedEventArgs e)
+    {
+        SetFocus(Password.IsFocused, Name.IsFocused);
     }
 }
