@@ -2,23 +2,23 @@ namespace ChatApp.Contact.EditContact;
 
 public class EditContactViewModel : ViewModelBase
 {
-    private string userId;
+    private string contactUserId;
     private string name;
     public Action<EditContactViewModel> Action { get; set; }
-    public string UserIdView => $"User-Id: {UserId}";
-    public EditContactViewModel(string name,string userId , Action<EditContactViewModel> action)
+    public string UserIdView => $"User-Id: {ContactUserId}";
+    public EditContactViewModel(string name,string contactUserId , Action<EditContactViewModel> action)
     {
-        UserId = userId;
+        ContactUserId = contactUserId;
         Name = name;
         Action = action;
     }
-    public string UserId
+    public string ContactUserId
     {
-        get => userId;
+        get => contactUserId;
         set
         {
-            if (value == userId) return;
-            userId = value;
+            if (value == contactUserId) return;
+            contactUserId = value;
             OnPropertyChanged();
         }
     }

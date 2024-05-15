@@ -32,8 +32,8 @@ public class ChatListViewModel : ViewModelBase
     }
     public async void Click(int index)
     {
-        ChatViewModel.HeaderViewModel.Name = list[index].Name;
-        var chatId = await getChatId(list[index].ContactId);
+        ChatViewModel.HeaderViewModel.Name = List[index].Name;
+        var chatId = await getChatId(List[index].ContactId);
         ChatViewModel.ChatId = chatId;
         var messages = getMessage(index);
         ChatViewModel.Messages = new ObservableCollection<MessageViewModel>();
@@ -50,11 +50,11 @@ public class ChatListViewModel : ViewModelBase
     }
     public void RemoveContact(EditContactViewModel contact)
     {
-        for (var i = 0; i < list.Count; i++)
+        for (var i = 0; i < List.Count; i++)
         {
-            if (list[i].ContactId == contact.UserId)
+            if (List[i].ContactId == contact.ContactUserId)
             {
-                list.RemoveAt(i);
+                List.RemoveAt(i);
             }
         }
     }

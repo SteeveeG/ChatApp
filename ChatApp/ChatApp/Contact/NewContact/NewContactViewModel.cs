@@ -35,9 +35,9 @@ public class NewContactViewModel : ViewModelBase
         {
             return;
         }
-        newContactId = HttpUtility.UrlEncode(newContactId);
+        NewContactId = HttpUtility.UrlEncode(NewContactId);
         var userid = HttpUtility.UrlEncode(AccUser.UserId);
-        contact = await ApiPost.Post<Library.Model.Contact>($"Sql/CreateContact?userId={userid}&contactId={newContactId}",
+        contact = await Api.Post<Library.Model.Contact>($"Sql/CreateContact?userId={NewContactId}&createdContactUserId={userid}",
             new StringContent(string.Empty));
         action(contact);
         NewContactId = string.Empty;

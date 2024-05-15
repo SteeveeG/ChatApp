@@ -2,6 +2,7 @@ using System.Data.SqlClient;
 using Dapper;
 using Library.Model;
 using Microsoft.AspNetCore.Mvc;
+using Type = Library.Enum.Type;
 
 namespace Api.Controllers;
 
@@ -11,12 +12,13 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
 {
     private string connectionString;
     private readonly List<IObserver<Subscriber>> observers;
+
     public SqlController()
     {
         GetLocalHost();
         observers = new List<IObserver<Subscriber>>();
     }
-    
+
     [ApiExplorerSettings(IgnoreApi = true)]
     [NonAction]
     public IDisposable Subscribe(IObserver<Subscriber> observer)
@@ -25,11 +27,10 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             observers.Add(observer);
         }
-        
-        
+
         return new Unsubscribe(observers, observer);
     }
-    
+
 
     [HttpPost("AddUser")]
     public async void AddUser(AccUser accUser)
@@ -42,8 +43,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
     public async void AddContact(Contact contact)
     {
         await InsertSql($"insert into Contact" +
-                        $" (UserId, CreatedContactUserId, LastMessage, LastMessageTime, ContactUsername) values " +
-                        $"('{contact.UserId}','{contact.CreatedContactUserId}','{contact.LastMessage}',convert(datetime, '{contact.LastMessageTime}'),'{contact.ContactUsername}')");
+                        $" (UserId, CreatedContactUserId, LastMessage, LastMessageTime) values " +
+                        $"('{contact.UserId}','{contact.CreatedContactUserId}','{contact.LastMessage}',convert(datetime, '{contact.LastMessageTime}'))");
     }
 
     [HttpPost("AddMessage")]
@@ -53,46 +54,62 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
                         $" (UserId, ChatId, Content, Time) values " +
                         $"('{message.UserId}','{message.ChatId}','{message.Content}',convert(datetime, '{message.Time}', 104))");
 
-       var userId =  await GetContactId(message.ChatId);
+        var userId = await GetContactId(message);
 
-       await InsertSql($"UPDATE Contact SET LastMessage = '{message.Content}' , LastMessageTime=convert(datetime, '{DateTime.Now}', 104)  WHERE UserId = '{userId}' and CreatedContactUserId = '{message.UserId}'");
+        await InsertSql(
+            $"UPDATE Contact SET LastMessage = '{message.Content}' , LastMessageTime = convert(datetime, '{DateTime.Now}', 104)  WHERE UserId = '{userId}'  and CreatedContactUserId = '{message.UserId}' or CreatedContactUserId = '{userId}' and UserId = '{message.UserId}'");
+
+        var chat = await GetChat(userId, message.UserId);
+        NotifyObserver(new Subscriber
+        {
+            Type = Type.Message,
+            Message = message,
+            Chat = chat
+        });
+        
+        
     }
 
-    private async Task<string> GetContactId(string chatId)
+    private async Task<string> GetContactId(Message message)
     {
-        var contactId = string.Empty;
+        Chat chat;
         try
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            contactId= con.Query<string>($"Select UserId from Chat where ChatId = '{chatId}'").ToArray()[0];
+            chat = con.Query<Chat>($"Select * from Chat where ChatId = '{message.ChatId}'").ToArray()[0];
             con.Close();
-            return contactId;
+            return chat.UserId == message.UserId ? chat.CreatedChatUserId : chat.UserId;
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
-            return contactId;
+            return string.Empty;
         }
     }
+
 
     [HttpPost("CreateContact")]
     public async Task<Contact> CreateContact(string userId, string createdContactUserId)
     {
-        string username;
         Contact contact;
         try
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            username = con.Query<string>($"Select Username from AccUser where UserId = '{createdContactUserId}'").ToArray()[0];
             con.Query(
-                $"Insert into Contact (UserId, CreatedContactUserId , LastMessage , LastMessageTime ,ContactUsername) values " +
-                $"('{createdContactUserId}', '{userId}', ' ' ,convert(datetime, '{DateTime.Now}', 104) ,'{username}')");
+                $"Insert into Contact (UserId, CreatedContactUserId , LastMessage , LastMessageTime) values " +
+                $"('{userId}', '{createdContactUserId}', ' ' ,convert(datetime, '{DateTime.Now}', 104))");
             contact = con
-                .Query<Contact>($"Select * from Contact Where UserId = '{createdContactUserId}' and CreatedContactUserId = '{userId}'")
+                .Query<Contact>(
+                    $"Select * from Contact Where UserId = '{userId}' and CreatedContactUserId = '{createdContactUserId}'")
                 .ToArray()[0];
             con.Close();
+            NotifyObserver(new Subscriber
+            {
+                Type = Type.CreatedContact,
+                Contact = contact
+            });
         }
         catch (Exception e)
         {
@@ -146,7 +163,6 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             }
 
             con.Query($"UPDATE AccUser SET Username = '{newusername}' WHERE UserId = '{userId}'");
-            con.Query($"UPDATE Contact SET ContactUsername = '{newusername}' WHERE CreatedContactUserId = '{userId}'");
             con.Close();
             return true;
         }
@@ -196,7 +212,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             ChatId = chatId
         };
         await InsertSql(
-            $"insert into Chat (ChatId , UserId, UserId) values ('{chat.ChatId}' ,'{chat.CreatedChatUserId}' , '{chat.UserId}')");
+            $"insert into Chat (ChatId , UserId, CreatedChatUserId) values ('{chat.ChatId}' ,'{chat.UserId}' , '{chat.CreatedChatUserId}')");
 
         return chat;
     }
@@ -250,7 +266,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            contacts = con.Query<Contact>($"Select * from Contact where UserId = '{userId}'");
+            contacts = con.Query<Contact>(
+                $"Select * from Contact where UserId = '{userId}'or CreatedContactUserId = '{userId}' order by UserId ASC ");
             con.Close();
         }
         catch (Exception e)
@@ -261,6 +278,66 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         return contacts.ToList();
     }
 
+    [HttpGet("GetContactNames")]
+    public async Task<List<string>> GetContactNames(string userId)
+    {
+        IEnumerable<Contact> contacts = new List<Contact>();
+        var contactsNames = new List<string>();
+        try
+        {
+            var con = new SqlConnection(connectionString);
+            con.Open();
+            contacts = con.Query<Contact>(
+                $"Select * from Contact where UserId = '{userId}'or CreatedContactUserId = '{userId}'");
+            foreach (var contact in contacts)
+            {
+                if (contact.CreatedContactUserId == userId)
+                {
+                    contactsNames.Add(con
+                        .Query<string>(
+                            $"Select Username from AccUser where UserId = '{contact.UserId}' order by UserId ASC  ")
+                        .ToArray()[0]);
+                }
+                else if (contact.UserId == userId)
+                {
+                    contactsNames.Add(con
+                        .Query<string>(
+                            $"Select Username from AccUser where UserId = '{contact.CreatedContactUserId}' order by UserId ASC ")
+                        .ToArray()[0]);
+                }
+            }
+
+            con.Close();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+        return contactsNames;
+    }
+
+
+    [HttpGet("GetUsername")]
+    public async Task<string> GetUsername(string userId)
+    {
+        var username = string.Empty;
+        try
+        {
+            var con = new SqlConnection(connectionString);
+            con.Open();
+            username = con.Query<string>($"Select Username from AccUser where UserId = '{userId}'").ToArray()[0];
+            con.Close();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+        return username;
+    }
+
+
     [HttpGet("GetChat")]
     public async Task<Chat> GetChat(string userId, string contactId)
     {
@@ -269,7 +346,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            chat = con.Query<Chat>($"Select * from Chat where CreatedChatUserId = '{userId}' and UserId = '{contactId}' ");
+            chat = con.Query<Chat>(
+                $"Select * from Chat where CreatedChatUserId = '{userId}' and UserId = '{contactId}' or CreatedChatUserId = '{contactId}' and UserId = '{userId}'");
             con.Close();
         }
         catch (Exception e)
@@ -331,14 +409,10 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
     public async Task<bool> OwnDeleteAcc(string userId)
     {
         var count = new List<int>();
-        var result2 =
+        var result =
             await InsertSql(
                 $"UPDATE AccUser SET Username = 'Account Deleted', Password='Account Deleted' WHERE UserId = '{userId}'");
-        
-        var result3 =  await InsertSql(
-            $"UPDATE Contact SET ContactUsername = 'Account Deleted'  WHERE UserId = '{userId}'");
 
-        
         var contacts = await GetUserContacts(userId);
         foreach (var contact in contacts)
         {
@@ -349,20 +423,23 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            count = con.Query<int>( $"SELECT  Count(*)  FROM Contact where CreatedContactUserId = '{userId}' or UserId = '{userId}';\nSELECT  Count(*)  FROM Chat where CreatedChatUserId = '{userId}' or UserId = '{userId}';\nSELECT  Count(*)  FROM Message where   UserId = '{userId}'").ToList();
+            count = con.Query<int>(
+                    $"SELECT  Count(*)  FROM Contact where CreatedContactUserId = '{userId}' or UserId = '{userId}';\nSELECT  Count(*)  FROM Chat where CreatedChatUserId = '{userId}' or UserId = '{userId}';\nSELECT  Count(*)  FROM Message where   UserId = '{userId}'")
+                .ToList();
             con.Close();
         }
         catch
         {
             return false;
         }
-        var resul =count.All(item => item == 0);
+
+        var resul = count.All(item => item == 0);
         if (resul)
         {
             await InsertSql($"Delete AccUser Where UserId = '{userId}'");
         }
 
-        return result2 && result3;
+        return result;
     }
 
     private string RandomString()
@@ -371,7 +448,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         string userId;
         do
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
             userId = new string(Enumerable.Repeat(chars, 45)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         } while (false);
@@ -395,7 +472,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             return false;
         }
     }
-    
+
     public async Task<List<string>> GetChatIds(string userId)
     {
         var list = new List<string>();
@@ -412,9 +489,10 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             Console.WriteLine(e);
             return new List<string>();
         }
+
         return list;
     }
-    
+
     private async Task<bool> CheckIfContactUsed(string userId, string contactId)
     {
         int count;
@@ -423,7 +501,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             count = con.Query<int>(
-                $"Select Count(*) from Contact where CreatedContactUserId = '{userId}' and UserId = '{contactId}'").ToArray()[0];
+                    $"Select Count(*) from Contact where CreatedContactUserId = '{userId}' and UserId = '{contactId}'")
+                .ToArray()[0];
             con.Close();
         }
         catch (Exception e)
@@ -435,12 +514,21 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         return count == 1;
     }
 
+    private void NotifyObserver(Subscriber subscriber)
+    {
+        foreach (var observer in observers)
+        {
+            observer.OnNext(subscriber);
+        }
+    }
+
     private void GetLocalHost()
     {
         var myServer = Environment.MachineName;
         connectionString =
             @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
     }
+
     private class Unsubscribe : IDisposable
     {
         private List<IObserver<Subscriber>> observers;
@@ -461,5 +549,4 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             }
         }
     }
-    
 }

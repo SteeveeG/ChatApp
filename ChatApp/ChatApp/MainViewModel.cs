@@ -1,7 +1,10 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
+using System.Text.Json;
 using System.Web;
+using System.Windows;
+using System.Windows.Media.Converters;
 using ChatApp.ApiHandler;
 using ChatApp.Chat;
 using ChatApp.Chat.Messages;
@@ -12,11 +15,13 @@ using ChatApp.Contact.EditContact;
 using ChatApp.HomeNavBar;
 using ChatApp.Settings;
 using Library.Model;
+using Microsoft.AspNetCore.Components;
+using Type = Library.Enum.Type;
 
 namespace ChatApp;
 
 //TODO Ids for Call Encoden
-//TODO Context ContactID ist die UserId von deinem Contact :D
+//TODO Context ContactID ist die ContactUserId von deinem Contact :D
 public class MainViewModel : ViewModelBase
 {
     private List<Library.Model.Contact> contacts;
@@ -31,6 +36,7 @@ public class MainViewModel : ViewModelBase
     public ContactViewModel ContactViewModel { get; set; }
     public Func<int, List<Message>> GetMessage { get; set; }
     public Func<string, Task<string>> GetChatIdFunc { get; set; }
+
     public MainViewModel()
     {
         /*Init MainViewModel*/
@@ -44,16 +50,16 @@ public class MainViewModel : ViewModelBase
 
     public MainViewModel(AccUser acc)
     {
+        user = acc;
+        curentChatIndex = 0;
         GetChatIdFunc = GetChatId;
         GetMessage = GetMessages;
         Messages = new List<List<Message>>();
-        user = acc;
-        ChatViewModel = new ChatViewModel(SetMessage ,acc);
+        ChatViewModel = new ChatViewModel(SetMessage, acc);
         ChatListViewModel = new ChatListViewModel(ChatViewModel, acc.UserId, GetMessage, GetChatIdFunc);
         HomeNavbarViewModel = new HomeNavbarViewModel();
-        SettingsViewModel = new SettingsViewModel(this,acc);
+        SettingsViewModel = new SettingsViewModel(this, acc);
         ContactViewModel = new ContactViewModel(this, acc);
-        curentChatIndex = 0;
         GetContacts();
         ConnectToGrpc();
     }
@@ -61,16 +67,47 @@ public class MainViewModel : ViewModelBase
     private void ConnectToGrpc()
     {
         Task.Run(async () =>
-        { 
-            await Task.Run(() =>  Library.GrpcHandler.GrpcHandler.OpenStream(SetNewInput));
+        {
+            await Task.Run(() => Library.GrpcHandler.GrpcHandler.OpenStream(SetNewInput, user.UserId));
         });
     }
 
     private void SetNewInput(string json)
     {
-        
+        var sub = JsonSerializer.Deserialize<Subscriber>(json);
+        switch (sub.Type)
+        {
+            case Type.CreatedContact:
+                Application.Current.Dispatcher.Invoke(() => UpdateContacts(sub.Contact, true));
+                break;
+            case Type.Message:
+                Application.Current.Dispatcher.Invoke(() => UpdateMessages(sub.Message));
+                break;
+            case Type.CreatedChat:
+                break;
+            case Type.DeleteContact:
+                break;
+            case Type.DeleteAccount:
+                break;
+            default:
+                return;
+        }
     }
-    
+
+    private void UpdateMessages(Message message)
+    {
+        if (message.ChatId == CurrentChatId)
+        {
+            ChatViewModel.Messages.Add(new MessageViewModel(message.Content, false));
+        }
+        var index = ChatListViewModel.List.IndexOf(
+            ChatListViewModel.List.FirstOrDefault(p
+                => p.ContactId == message.UserId));
+        Messages[index].Add(message);
+        ChatListViewModel.List[index].LastMessage = message.Content;
+        ChatListViewModel.List[index].LastMessageTime = message.Time;
+    }
+
     private void SetMessage(MessageViewModel message)
     {
         var time = DateTime.Now;
@@ -83,7 +120,6 @@ public class MainViewModel : ViewModelBase
         });
         ChatListViewModel.List[curentChatIndex].LastMessage = message.Message;
         ChatListViewModel.List[curentChatIndex].LastMessageTime = time;
-
     }
 
     private async Task<string> GetChatId(string ContactId)
@@ -122,7 +158,7 @@ public class MainViewModel : ViewModelBase
     private async Task AddChatMessages(string chatId)
     {
         var convertedchatId = HttpUtility.UrlEncode(chatId);
-        var result = await ApiGet.GetApiIn<List<Message>>($"Sql/GetMessages?chatId={convertedchatId}");
+        var result = await Api.GetIn<List<Message>>($"Sql/GetMessages?chatId={convertedchatId}");
         Messages.Add(result ?? new List<Message>());
     }
 
@@ -130,34 +166,44 @@ public class MainViewModel : ViewModelBase
     {
         var convertedcontactId = HttpUtility.UrlEncode(contactId);
         var converteduserId = HttpUtility.UrlEncode(userId);
-        var chat = await ApiGet.GetApiIn<Library.Model.Chat>($"Sql/GetChat?userId={converteduserId}&contactId={convertedcontactId}");
+        var chat = await Api.GetIn<Library.Model.Chat>(
+            $"Sql/GetChat?userId={converteduserId}&contactId={convertedcontactId}");
         return chat.ChatId;
     }
 
     private async void GetContacts()
     {
         var converteduserId = HttpUtility.UrlEncode(user.UserId);
-        Contacts = await ApiGet.GetApiIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
-        foreach (var contact in Contacts)
+        Contacts = await Api.GetIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
+        var Usernames = await Api.GetIn<List<string>>($"Sql/GetContactNames?userId={converteduserId}");
+
+        for (var i = 0; i < Contacts.Count; i++)
         {
-            ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel));
-            ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.UserId,
+            var id = Contacts[i].UserId == user.UserId ? Contacts[i].CreatedContactUserId : Contacts[i].UserId;
+            ChatListViewModel.List.Add(new ChatListItemViewModel(Contacts[i], ChatListViewModel, Usernames[i], id));
+            ContactViewModel.Contacts.Add(new EditContactViewModel(Usernames[i], id,
                 ContactViewModel.Delete));
-            var chatId = await GetChatId(contact.UserId, user.UserId);
+            var chatId = await GetChatId(id, user.UserId);
             //Todo Returns Null 
             await AddChatMessages(chatId);
         }
     }
 
 
-    public async void UpdateContacts(Library.Model.Contact contact)
+    public async void UpdateContacts(Library.Model.Contact contact, bool IsGrpc)
     {
-        await ControlCreateChatId(contact);
-        ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel));
-        ContactViewModel.Contacts.Add(new EditContactViewModel(contact.ContactUsername, contact.UserId,
-            ContactViewModel.Delete));
+        var id = contact.UserId == user.UserId ? contact.CreatedContactUserId : contact.UserId;
+        if (!IsGrpc)
+        {
+            await ControlCreateChatId(contact);
+        }
+
+        var name = await Api.GetIn<string>($"Sql/GetUsername?userId={id}");
+        ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel, name, id));
+        ContactViewModel.Contacts.Add(new EditContactViewModel(name, id, ContactViewModel.Delete));
         Messages.Add(new List<Message>());
     }
+
 
     private async Task ControlCreateChatId(Library.Model.Contact contact)
     {
@@ -165,18 +211,19 @@ public class MainViewModel : ViewModelBase
         {
             return;
         }
+
         var convertedUserId = HttpUtility.UrlEncode(contact.CreatedContactUserId);
         var convertedContactId = HttpUtility.UrlEncode(contact.UserId);
-        await ApiGet.GetApiIn<Library.Model.Chat>($"Sql/CreateChat?userId={convertedUserId}&contactId={convertedContactId}");
+        await Api.GetIn<Library.Model.Chat>(
+            $"Sql/CreateChat?userId={convertedUserId}&contactId={convertedContactId}");
     }
 
     public void NewName(string newUsername)
     {
         ContactViewModel.OwnUsername = newUsername;
     }
-    
-    
-    
+
+
     public List<List<Message>> Messages
     {
         get => messages;

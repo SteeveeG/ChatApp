@@ -37,7 +37,7 @@ public class SettingsViewModel : ViewModelBase
     private async Task<bool> Delete()
     {
         var userId = HttpUtility.UrlEncode(accUser.UserId);
-        return await ApiDelete.Delete<bool>($"Sql/OwnDeleteAcc?userId={userId}");
+        return await Api.Delete<bool>($"Sql/OwnDeleteAcc?userId={userId}");
     }
 
 
@@ -46,7 +46,7 @@ public class SettingsViewModel : ViewModelBase
         if (!string.IsNullOrEmpty(NewNameSettingsInputViewModel.NewInput?.Trim()))
         {
             var input = HttpUtility.UrlEncode(NewNameSettingsInputViewModel.NewInput);
-            var result = await ApiPost.Post<bool>($"Sql/ChangeUsername?newusername={input}&userId={accUser.UserId}",
+            var result = await Api.Post<bool>($"Sql/ChangeUsername?newusername={input}&userId={accUser.UserId}",
                 new StringContent(""));
             if (result)
             {
@@ -69,7 +69,7 @@ public class SettingsViewModel : ViewModelBase
             }
 
             var input = HttpUtility.UrlEncode(NewPasswordSettingsInputViewModel.NewInput);
-            var result = await ApiPost.Post<bool>($"Sql/ChangePassword?userId={accUser.UserId}&password={input}",
+            var result = await Api.Post<bool>($"Sql/ChangePassword?userId={accUser.UserId}&password={input}",
                 new StringContent(""));
             if (result)
             {

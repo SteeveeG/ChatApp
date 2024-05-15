@@ -9,12 +9,15 @@ namespace Library.GrpcHandler;
 public class GrpcHandler
 {
     public static bool Unsubscribe = false;
-    public static async Task OpenStream(Action<string> update)
+    public static async Task OpenStream(Action<string> update ,string userId)
     {
         string currentData;
         var channel = GrpcChannel.ForAddress("https://localhost:7049");
         var client = new ChatService.ChatServiceClient(channel);
-        var result = client.OpenStream(new Request());
+        var result = client.OpenStream(new Request
+        {
+            UserId = userId
+        });
         do
         {
             while (await result.ResponseStream.MoveNext())

@@ -4,9 +4,9 @@ using System.Net.Http.Json;
 
 namespace ChatApp.ApiHandler;
 
-public class ApiGet
+public class Api
 {
-    public static async Task<T> GetApiIn<T>(string requestUri)
+    public static async Task<T> GetIn<T>(string requestUri)
     {
         using var client = new HttpClient();
         client.BaseAddress = new Uri("https://localhost:7049");
@@ -20,10 +20,9 @@ public class ApiGet
 
         return default;
     }
-}
-public class ApiPost
-{
-    public static async Task<T> Post<T>(string requestUri , HttpContent content)
+
+
+    public static async Task<T> Post<T>(string requestUri, HttpContent content)
     {
         using var client = new HttpClient();
         client.BaseAddress = new Uri("https://localhost:7049");
@@ -34,12 +33,11 @@ public class ApiPost
         {
             return await response.Content.ReadFromJsonAsync<T>();
         }
-        return default;
-    } 
-}
 
-public class ApiDelete
-{
+        return default;
+    }
+
+
     public static async Task<T> Delete<T>(string requestUri)
     {
         using var client = new HttpClient();
@@ -51,7 +49,7 @@ public class ApiDelete
         {
             return await response.Content.ReadFromJsonAsync<T>();
         }
+
         return default;
     }
-    
 }

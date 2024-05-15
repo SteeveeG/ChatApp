@@ -44,8 +44,9 @@ public partial class SettingsInputControl : UserControl
         {
             var loginregister = new LoginRegisterMenu.LoginRegisterMenu();
             loginregister.Show();
-            var parentWindow = Window.GetWindow(this);
-            parentWindow.Close();
+            //Todo closed for Testing !!!
+            // var parentWindow = Window.GetWindow(this);
+            // parentWindow.Close();
         }
         else if (ViewModel.Label.Contains("Account"))
         {

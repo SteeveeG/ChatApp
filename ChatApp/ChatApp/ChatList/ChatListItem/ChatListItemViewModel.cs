@@ -8,13 +8,13 @@ public class ChatListItemViewModel : ViewModelBase
     private string contactId;
     public ChatListViewModel ChatListViewModel { get; set; }
 
-    public ChatListItemViewModel(Library.Model.Contact contact, ChatListViewModel chatListViewModel)
+    public ChatListItemViewModel(Library.Model.Contact contact, ChatListViewModel chatListViewModel, string username, string id)
     {
         ChatListViewModel = chatListViewModel;
-        Name = contact.ContactUsername;
+        Name = username;
         LastMessage =  contact.LastMessage;
         LastMessageTime =  contact.LastMessageTime;
-        ContactId =  contact.UserId;
+        ContactId =  id;
     }
 
 

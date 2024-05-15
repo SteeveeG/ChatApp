@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
+using System.Net.Http;
+using System.Web;
 using System.Windows;
+using ChatApp.ApiHandler;
 using ChatApp.Contact.EditContact;
 using Library.Model;
 
@@ -48,12 +51,12 @@ public class ContactViewModel : ViewModelBase
 
     public void UpdateContactList(Library.Model.Contact contact)
     {
-        MainViewModel.UpdateContacts(contact);
+        MainViewModel.UpdateContacts(contact , false);
     }
 
     public async void Delete(EditContactViewModel contact)
     {
-        if (!await MainViewModel.DeleteContact(contact.UserId))
+        if (!await MainViewModel.DeleteContact(contact.ContactUserId))
         {
             return;
         }

@@ -30,7 +30,7 @@
     "APIgRPC": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:7049;https://localhost:7227",
       "environmentVariables": {

@@ -6,5 +6,4 @@ public class Contact
     public string CreatedContactUserId { get; set; }
     public string LastMessage { get; set; }
     public DateTime LastMessageTime { get; set; }
-    public string ContactUsername { get; set; }
 }

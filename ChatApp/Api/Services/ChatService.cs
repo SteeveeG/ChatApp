@@ -1,11 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Text.Json;
 using Api.Controllers;
-using Azure;
-using Azure.Core;
 using Grpc.Core;
 using Library.Model;
-using Library;
 using Request = Grpc.Protos.Request;
 using Response = Grpc.Protos.Response;
 using Type = Library.Enum.Type;
@@ -32,6 +29,7 @@ namespace Api.Services
 
         private void Unsubscribe()
         {
+            Debug.Write("Dispose");
             unsubscriber.Dispose();
         }
 
@@ -60,16 +58,15 @@ namespace Api.Services
             {
                 if (isChanged)
                 {
-                    if (!await ControlId(request))
+                    if (await ControlId(request))
                     {
-                        return;
+                        var subscriberData = JsonSerializer.Serialize(subscriber);
+                        await responseStream.WriteAsync(new Response
+                        {
+                            Data = subscriberData
+                        });
+                        isChanged = false;
                     }
-                    var subscriberData = JsonSerializer.Serialize(subscriber);
-                    await responseStream.WriteAsync(new Response
-                    {
-                        Data = subscriberData
-                    });
-                    isChanged = false;
                 }
 
                 Thread.Sleep(50);
@@ -87,23 +84,18 @@ namespace Api.Services
             {
                 case Type.Message:
                     var result = await sqlController.GetChatIds(request.UserId);
-                    var id = result.Find(ids => ids == subscriber.Chat.ChatId);
-                    if (id == null)
+                    if (!result.Exists(s => s == subscriber.Message.ChatId))
                     {
                         return false;
                     }
-                    break;
-                case Type.CreatedChat:
-                    if (request.UserId != subscriber.Chat.UserId)
-                    {
-                        return false;
-                    }
-                    break;
+
+                    return request.UserId != subscriber.Message.UserId;
                 case Type.CreatedContact:
                     if (request.UserId != subscriber.Contact.UserId)
                     {
                         return false;
                     }
+
                     break;
                 case Type.DeleteContact:
                     //not implented
@@ -115,28 +107,5 @@ namespace Api.Services
 
             return true;
         }
-
-        // public override async Task<msg> ServerReceiveMessage(msg request, ServerCallContext context)
-        // {
-        //     Message = request;
-        //     newMessage = true;
-        //
-        //     return new msg();
-        // }
-        //
-        //
-        // public override async Task ServerSendMessage(msg request, IServerStreamWriter<msg> responseStream, ServerCallContext context)
-        // {
-        //     while (!context.CancellationToken.IsCancellationRequested)
-        //     {
-        //         if (!newMessage || Message.Id == request.Id)
-        //         {
-        //             continue;
-        //         }
-        //
-        //         await responseStream.WriteAsync(Message);
-        //         newMessage = false;
-        //     }
-        // }
     }
 }

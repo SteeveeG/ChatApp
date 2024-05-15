@@ -55,17 +55,17 @@ public class LoginRegisterMenuViewModel : ViewModelBase
 
     public async Task<AccUser> Create(string username, string password)
     {
-        return await ApiPost.Post<AccUser>($"Sql/CreateAcc?username={username}&password={password}",
+        return await Api.Post<AccUser>($"Sql/CreateAcc?username={username}&password={password}",
             new StringContent(""));
     }
 
     private async Task<bool> ControlCreateUsername(string username)
     {
-        return await ApiGet.GetApiIn<bool>($"Sql/ControlCreateUsername?username={username}");
+        return await Api.GetIn<bool>($"Sql/ControlCreateUsername?username={username}");
     }
 
     private async Task<AccUser> Login(string username, string password)
     {
-        return await ApiGet.GetApiIn<AccUser>($"Sql/GetAcc?username={username}&password={password}");
+        return await Api.GetIn<AccUser>($"Sql/GetAcc?username={username}&password={password}");
     }
 }
