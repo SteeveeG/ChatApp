@@ -1,10 +1,8 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Net.WebSockets;
 using System.Text.Json;
 using System.Web;
 using System.Windows;
-using System.Windows.Media.Converters;
 using ChatApp.ApiHandler;
 using ChatApp.Chat;
 using ChatApp.Chat.Messages;
@@ -15,13 +13,10 @@ using ChatApp.Contact.EditContact;
 using ChatApp.HomeNavBar;
 using ChatApp.Settings;
 using Library.Model;
-using Microsoft.AspNetCore.Components;
 using Type = Library.Enum.Type;
 
 namespace ChatApp;
 
-//TODO Ids for Call Encoden
-//TODO Context ContactID ist die ContactUserId von deinem Contact :D
 public class MainViewModel : ViewModelBase
 {
     private List<Library.Model.Contact> contacts;
@@ -38,9 +33,7 @@ public class MainViewModel : ViewModelBase
     public Func<string, Task<string>> GetChatIdFunc { get; set; }
 
     public MainViewModel()
-    {
-        /*Init MainViewModel*/
-
+    { 
         ChatViewModel = new ChatViewModel();
         ChatListViewModel = new ChatListViewModel(ChatViewModel);
         HomeNavbarViewModel = new HomeNavbarViewModel();
@@ -82,8 +75,6 @@ public class MainViewModel : ViewModelBase
                 break;
             case Type.Message:
                 Application.Current.Dispatcher.Invoke(() => UpdateMessages(sub.Message));
-                break;
-            case Type.CreatedChat:
                 break;
             case Type.DeleteContact:
                 break;

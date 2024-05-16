@@ -95,7 +95,6 @@ namespace Api.Services
                     {
                         return false;
                     }
-
                     break;
                 case Type.DeleteContact:
                     //not implented
