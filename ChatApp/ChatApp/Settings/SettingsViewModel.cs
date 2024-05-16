@@ -1,8 +1,8 @@
+using System.IO;
 using System.Net.Http;
 using System.Web;
-using System.Windows;
-using System.Windows.Controls;
 using ChatApp.ApiHandler;
+using ChatApp.CustomMessageBox;
 using ChatApp.Settings.SettingsInput;
 using Library.Model;
 
@@ -45,6 +45,11 @@ public class SettingsViewModel : ViewModelBase
     {
         if (!string.IsNullOrEmpty(NewNameSettingsInputViewModel.NewInput?.Trim()))
         {
+            if (NewNameSettingsInputViewModel.NewInput == accUser.Username)
+            {
+                CustomMessageBoxHandler.Create("you already have this username"); 
+                return;
+            }
             var input = HttpUtility.UrlEncode(NewNameSettingsInputViewModel.NewInput);
             var result = await Api.Post<bool>($"Sql/ChangeUsername?newusername={input}&userId={accUser.UserId}",
                 new StringContent(""));
@@ -53,37 +58,42 @@ public class SettingsViewModel : ViewModelBase
                 mainViewModel.NewName(NewNameSettingsInputViewModel.NewInput);
                 NewNameSettingsInputViewModel.NewInput = string.Empty;
             }
+            else
+            {
+                CustomMessageBoxHandler.Create("this name is already taken :("); 
+                return;
+            }
         }
 
-        if (NewPasswordSettingsInputViewModel.NewInput == null)
+        if (NewPasswordSettingsInputViewModel.NewInput?.Trim() == null)
         {
             return;
         }
-
         var passwordResult = PasswordValidator.ValidatePassword(NewPasswordSettingsInputViewModel.NewInput.Trim());
         if (passwordResult.Item1)
         {
-            if (string.IsNullOrEmpty(NewPasswordSettingsInputViewModel.NewInput.Trim()))
-            {
-                return;
-            }
-
             var input = HttpUtility.UrlEncode(NewPasswordSettingsInputViewModel.NewInput);
             var result = await Api.Post<bool>($"Sql/ChangePassword?userId={accUser.UserId}&password={input}",
                 new StringContent(""));
             if (result)
             {
-                NewNameSettingsInputViewModel.NewInput = string.Empty;
+                NewPasswordSettingsInputViewModel.NewInput = string.Empty;
             }
         }
         else
         {
-            MessageBox.Show($"Password Rules Broken: {passwordResult.Item2}");
+            CustomMessageBoxHandler.Create($"Password Rules Broken\n{passwordResult.Item2}");
         }
     }
 
 
     public void ChangeProfilePic()
     {
+        
+        
+        
+        
+        var fi = new FileInfo(@"c:\yourfile.ext");
+        fi.CopyTo(@"d:\anotherfile.ext", true); // existing file will be overwritten
     }
 }
