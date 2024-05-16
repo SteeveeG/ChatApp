@@ -57,7 +57,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         var userId = await GetContactId(message);
 
         await InsertSql(
-            $"UPDATE Contact SET LastMessage = '{message.Content}' , LastMessageTime = convert(datetime, '{DateTime.Now}', 104)  WHERE UserId = '{userId}'  and CreatedContactUserId = '{message.UserId}' or CreatedContactUserId = '{userId}' and UserId = '{message.UserId}'");
+            $"UPDATE Contact SET LastMessage = '{message.Content}' , LastMessageTime = convert(datetime, '{DateTime.Now}', 104)  WHERE UserId Collate Latin1_General_CS_AS = '{userId}'  and CreatedContactUserId Collate Latin1_General_CS_AS = '{message.UserId}' or CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}' and UserId Collate Latin1_General_CS_AS = '{message.UserId}'");
 
         var chat = await GetChat(userId, message.UserId);
         NotifyObserver(new Subscriber
@@ -77,7 +77,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            chat = con.Query<Chat>($"Select * from Chat where ChatId = '{message.ChatId}'").ToArray()[0];
+            chat = con.Query<Chat>($"Select * from Chat where ChatId Collate Latin1_General_CS_AS = '{message.ChatId}'").ToArray()[0];
             con.Close();
             return chat.UserId == message.UserId ? chat.CreatedChatUserId : chat.UserId;
         }
@@ -102,7 +102,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
                 $"('{userId}', '{createdContactUserId}', ' ' ,convert(datetime, '{DateTime.Now}', 104))");
             contact = con
                 .Query<Contact>(
-                    $"Select * from Contact Where UserId = '{userId}' and CreatedContactUserId = '{createdContactUserId}'")
+                    $"Select * from Contact Where UserId Collate Latin1_General_CS_AS = '{userId}' and CreatedContactUserId Collate Latin1_General_CS_AS = '{createdContactUserId}'")
                 .ToArray()[0];
             con.Close();
             NotifyObserver(new Subscriber
@@ -132,12 +132,12 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             do
             {
                 userId = RandomString();
-                count = con.Query<int>($"Select COUNT(*) from AccUser where UserId = '{userId}'");
+                count = con.Query<int>($"Select COUNT(*) from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'");
             } while (count.ToArray()[0] > 0);
 
             con.Query("Insert Into AccUser (UserId ,Username ,Password)" +
                       $"VALUES ('{userId}','{username}','{password}')");
-            var account = con.Query<AccUser>($"Select * from AccUser where UserId = '{userId}'");
+            var account = con.Query<AccUser>($"Select * from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
             return account.ToList()[0];
         }
@@ -156,13 +156,13 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            count = con.Query<int>($"Select Count(*) from AccUser where Username = '{newusername}'").ToArray()[0];
+            count = con.Query<int>($"Select Count(*) from AccUser where Username Collate Latin1_General_CS_AS = '{newusername}'").ToArray()[0];
             if (count != 0)
             {
                 return false;
             }
 
-            con.Query($"UPDATE AccUser SET Username = '{newusername}' WHERE UserId = '{userId}'");
+            con.Query($"UPDATE AccUser SET Username  = '{newusername}' WHERE UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
             return true;
         }
@@ -180,7 +180,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            con.Query($"UPDATE AccUser SET Password = '{password}' WHERE UserId = '{userId}'");
+            con.Query($"UPDATE AccUser SET Password = '{password}' WHERE UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
             return true;
         }
@@ -201,7 +201,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            count = con.Query<int>($"Select Count(*) from Chat where ChatId = '{chatId}'").ToArray()[0];
+            count = con.Query<int>($"Select Count(*) from Chat where ChatId Collate Latin1_General_CS_AS = '{chatId}'").ToArray()[0];
             con.Close();
         } while (count != 0);
 
@@ -226,7 +226,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             count = con.Query<int>(
-                $"Select COUNT(*) from AccUser where Username = '{username}'");
+                $"Select COUNT(*) from AccUser where Username Collate Latin1_General_CS_AS = '{username}'");
 
             con.Close();
             return count.ToArray()[0] == 0;
@@ -247,7 +247,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             user = con.Query<AccUser>(
-                $"Select * from AccUser where Username = '{username}' and Password = '{password}' ");
+                $"Select * from AccUser where Username Collate Latin1_General_CS_AS = '{username}' and Password Collate Latin1_General_CS_AS = '{password}' ");
             con.Close();
         }
         catch (Exception e)
@@ -267,7 +267,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             contacts = con.Query<Contact>(
-                $"Select * from Contact where UserId = '{userId}'or CreatedContactUserId = '{userId}' order by UserId ASC ");
+                $"Select * from Contact where UserId Collate Latin1_General_CS_AS = '{userId}'or CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}' order by UserId ASC ");
             con.Close();
         }
         catch (Exception e)
@@ -288,21 +288,21 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             contacts = con.Query<Contact>(
-                $"Select * from Contact where UserId = '{userId}'or CreatedContactUserId = '{userId}'");
+                $"Select * from Contact where UserId Collate Latin1_General_CS_AS = '{userId}'or CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}'");
             foreach (var contact in contacts)
             {
                 if (contact.CreatedContactUserId == userId)
                 {
                     contactsNames.Add(con
                         .Query<string>(
-                            $"Select Username from AccUser where UserId = '{contact.UserId}' order by UserId ASC  ")
+                            $"Select Username from AccUser where UserId Collate Latin1_General_CS_AS = '{contact.UserId}' order by UserId ASC  ")
                         .ToArray()[0]);
                 }
                 else if (contact.UserId == userId)
                 {
                     contactsNames.Add(con
                         .Query<string>(
-                            $"Select Username from AccUser where UserId = '{contact.CreatedContactUserId}' order by UserId ASC ")
+                            $"Select Username from AccUser where UserId Collate Latin1_General_CS_AS = '{contact.CreatedContactUserId}' order by UserId ASC ")
                         .ToArray()[0]);
                 }
             }
@@ -326,7 +326,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            username = con.Query<string>($"Select Username from AccUser where UserId = '{userId}'").ToArray()[0];
+            username = con.Query<string>($"Select Username from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'").ToArray()[0];
             con.Close();
         }
         catch (Exception e)
@@ -347,7 +347,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             chat = con.Query<Chat>(
-                $"Select * from Chat where CreatedChatUserId = '{userId}' and UserId = '{contactId}' or CreatedChatUserId = '{contactId}' and UserId = '{userId}'");
+                $"Select * from Chat where CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}' and UserId Collate Latin1_General_CS_AS = '{contactId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{contactId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
         }
         catch (Exception e)
@@ -366,7 +366,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            messages = con.Query<Message>($"Select * from Message where ChatId = '{chatId}' ");
+            messages = con.Query<Message>($"Select * from Message where ChatId Collate Latin1_General_CS_AS = '{chatId}' ");
             con.Close();
         }
         catch (Exception e)
@@ -387,22 +387,22 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             DeleteMessages(chat.ChatId, contactId);
         }
 
-        await InsertSql($"Delete Contact where ContactId = '{contactId}' and UserId='{userId}'");
+        await InsertSql($"Delete Contact where ContactId Collate Latin1_General_CS_AS = '{contactId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
     }
 
 
     [HttpDelete("DeleteMessages")]
     public async void DeleteMessages(string chatId, string userId)
     {
-        await InsertSql($"Delete Message where ChatId = '{chatId}' and UserId = '{userId}'");
-        await InsertSql($"Delete Chat where ChatId = '{chatId}'");
+        await InsertSql($"Delete Message where ChatId Collate Latin1_General_CS_AS = '{chatId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
+        await InsertSql($"Delete Chat where ChatId Collate Latin1_General_CS_AS = '{chatId}'");
     }
 
 
     [HttpDelete("DeleteAllContactsFromUser")]
     public async Task<bool> DeleteAllContactsFromUser(string userId)
     {
-        return await InsertSql($"Delete Contact where UserId='{userId}'");
+        return await InsertSql($"Delete Contact where UserId Collate Latin1_General_CS_AS = '{userId}'");
     }
 
     [HttpDelete("OwnDeleteAcc")]
@@ -411,7 +411,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         var count = new List<int>();
         var result =
             await InsertSql(
-                $"UPDATE AccUser SET Username = 'Account Deleted', Password='Account Deleted' WHERE UserId = '{userId}'");
+                $"UPDATE AccUser SET Username = 'Account Deleted', Password='Account Deleted' WHERE UserId Collate Latin1_General_CS_AS = '{userId}'");
 
         var contacts = await GetUserContacts(userId);
         foreach (var contact in contacts)
@@ -424,7 +424,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             count = con.Query<int>(
-                    $"SELECT  Count(*)  FROM Contact where CreatedContactUserId = '{userId}' or UserId = '{userId}';\nSELECT  Count(*)  FROM Chat where CreatedChatUserId = '{userId}' or UserId = '{userId}';\nSELECT  Count(*)  FROM Message where   UserId = '{userId}'")
+                    $"SELECT  Count(*)  FROM Contact where CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}' or UserId Collate Latin1_General_CS_AS = '{userId}';\nSELECT  Count(*)  FROM Chat where CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}' or UserId Collate Latin1_General_CS_AS = '{userId}';\nSELECT  Count(*)  FROM Message where   UserId Collate Latin1_General_CS_AS = '{userId}'")
                 .ToList();
             con.Close();
         }
@@ -481,7 +481,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             list = con.Query<string>(
-                $"Select ChatId from Chat where UserId = '{userId}' or CreatedChatUserId = '{userId}'").ToList();
+                $"Select ChatId from Chat where UserId Collate Latin1_General_CS_AS = '{userId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}'").ToList();
             con.Close();
         }
         catch (Exception e)
@@ -501,7 +501,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             count = con.Query<int>(
-                    $"Select Count(*) from Contact where CreatedContactUserId = '{userId}' and UserId = '{contactId}'")
+                    $"Select Count(*) from Contact where CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}' and UserId Collate Latin1_General_CS_AS = '{contactId}'")
                 .ToArray()[0];
             con.Close();
         }
