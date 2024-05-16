@@ -9,7 +9,7 @@
         BorderBrush="GhostWhite" BorderThickness="2"
         mc:Ignorable="d" Background="#273747" WindowStyle="None"
         AllowsTransparency="True" ResizeMode="CanResizeWithGrip"
-        Title="CustomMessageBox" Height="450" Width="800"
+        Title="CustomMessageBox" MinHeight="480" MinWidth="500" Height="480" Width="500"
         MouseLeftButtonDown="OnMouseLeftButtonDown">
     <Window.DataContext>
         <local:CustomMessageBoxViewModel/>
