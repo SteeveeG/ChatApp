@@ -3,7 +3,6 @@ using Dapper;
 using Library.Model;
 using Microsoft.AspNetCore.Mvc;
 using Type = Library.Enum.Type;
-
 namespace Api.Controllers;
 
 [ApiController]
@@ -87,7 +86,12 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             return string.Empty;
         }
     }
-
+    [HttpPost("PostProfilePic")]
+    public async Task PostProfilePic(IFormFile file)
+    {
+               
+         
+    }
 
     [HttpPost("CreateContact")]
     public async Task<Contact> CreateContact(string userId, string createdContactUserId)
@@ -110,7 +114,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
                 Type = Type.CreatedContact,
                 Contact = contact
             });
-        }
+        } 
         catch (Exception e)
         {
             Console.WriteLine(e);
@@ -473,25 +477,24 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         }
     }
 
-    public async Task<List<string>> GetChatIds(string userId)
-    {
-        var list = new List<string>();
-        try
-        {
-            var con = new SqlConnection(connectionString);
-            con.Open();
-            list = con.Query<string>(
-                $"Select ChatId from Chat where UserId Collate Latin1_General_CS_AS = '{userId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}'").ToList();
-            con.Close();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return new List<string>();
-        }
-
-        return list;
-    }
+     public async Task<List<string>> GetChatIds(string userId)
+     {
+         var list = new List<string>();
+         try
+         {
+             var con = new SqlConnection(connectionString);
+             con.Open();
+             list = con.Query<string>(
+                 $"Select ChatId from Chat where UserId Collate Latin1_General_CS_AS = '{userId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}'").ToList();
+             con.Close();
+         }
+         catch (Exception e)
+         {
+             Console.WriteLine(e);
+             return new List<string>();
+         }
+              return list;
+     }
 
     private async Task<bool> CheckIfContactUsed(string userId, string contactId)
     {

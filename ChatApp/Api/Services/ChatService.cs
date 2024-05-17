@@ -84,10 +84,10 @@ namespace Api.Services
             {
                 case Type.Message:
                     var result = await sqlController.GetChatIds(request.UserId);
-                    if (!result.Exists(s => s == subscriber.Message.ChatId))
-                    {
-                        return false;
-                    }
+                     if (!result.Exists(s => s == subscriber.Message.ChatId))
+                     {
+                         return false;
+                     }
 
                     return request.UserId != subscriber.Message.UserId;
                 case Type.CreatedContact:
