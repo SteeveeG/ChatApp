@@ -1,8 +1,13 @@
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
+using System.Reflection.Metadata;
+using System.Windows.Controls;
 using Dapper;
 using Library.Model;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Win32.SafeHandles;
 using Type = Library.Enum.Type;
+
 namespace Api.Controllers;
 
 [ApiController]
@@ -65,8 +70,6 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             Message = message,
             Chat = chat
         });
-        
-        
     }
 
     private async Task<string> GetContactId(Message message)
@@ -86,11 +89,24 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             return string.Empty;
         }
     }
+
     [HttpPost("PostProfilePic")]
-    public async Task PostProfilePic(IFormFile file)
+    public async Task<byte[]> PostProfilePic(IFormFile file)
     {
-               
-         
+        
+
+        Console.WriteLine();
+        var file1 = file;
+
+        var length = file1.Length;
+        if (length < 0)
+            return Array.Empty<byte>();
+
+        await using var fileStream = file1.OpenReadStream();
+        var bytes = new byte[length];
+        await fileStream.ReadAsync(bytes, 0, (int)file1.Length);
+        fileStream.Close();
+        return bytes;
     }
 
     [HttpPost("CreateContact")]
@@ -114,7 +130,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
                 Type = Type.CreatedContact,
                 Contact = contact
             });
-        } 
+        }
         catch (Exception e)
         {
             Console.WriteLine(e);
@@ -136,12 +152,14 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             do
             {
                 userId = RandomString();
-                count = con.Query<int>($"Select COUNT(*) from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'");
+                count = con.Query<int>(
+                    $"Select COUNT(*) from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'");
             } while (count.ToArray()[0] > 0);
 
             con.Query("Insert Into AccUser (UserId ,Username ,Password)" +
                       $"VALUES ('{userId}','{username}','{password}')");
-            var account = con.Query<AccUser>($"Select * from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'");
+            var account =
+                con.Query<AccUser>($"Select * from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
             return account.ToList()[0];
         }
@@ -160,13 +178,16 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            count = con.Query<int>($"Select Count(*) from AccUser where Username Collate Latin1_General_CS_AS = '{newusername}'").ToArray()[0];
+            count = con.Query<int>(
+                    $"Select Count(*) from AccUser where Username Collate Latin1_General_CS_AS = '{newusername}'")
+                .ToArray()[0];
             if (count != 0)
             {
                 return false;
             }
 
-            con.Query($"UPDATE AccUser SET Username  = '{newusername}' WHERE UserId Collate Latin1_General_CS_AS = '{userId}'");
+            con.Query(
+                $"UPDATE AccUser SET Username  = '{newusername}' WHERE UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
             return true;
         }
@@ -184,7 +205,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            con.Query($"UPDATE AccUser SET Password = '{password}' WHERE UserId Collate Latin1_General_CS_AS = '{userId}'");
+            con.Query(
+                $"UPDATE AccUser SET Password = '{password}' WHERE UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
             return true;
         }
@@ -205,7 +227,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            count = con.Query<int>($"Select Count(*) from Chat where ChatId Collate Latin1_General_CS_AS = '{chatId}'").ToArray()[0];
+            count = con.Query<int>($"Select Count(*) from Chat where ChatId Collate Latin1_General_CS_AS = '{chatId}'")
+                .ToArray()[0];
             con.Close();
         } while (count != 0);
 
@@ -257,6 +280,11 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         catch (Exception e)
         {
             Console.WriteLine(e);
+        }
+
+        if (user.ToList().Count == 0)
+        {
+            return new AccUser();
         }
 
         return user.ToList()[0];
@@ -330,7 +358,9 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            username = con.Query<string>($"Select Username from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'").ToArray()[0];
+            username = con
+                .Query<string>($"Select Username from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'")
+                .ToArray()[0];
             con.Close();
         }
         catch (Exception e)
@@ -370,7 +400,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            messages = con.Query<Message>($"Select * from Message where ChatId Collate Latin1_General_CS_AS = '{chatId}' ");
+            messages = con.Query<Message>(
+                $"Select * from Message where ChatId Collate Latin1_General_CS_AS = '{chatId}' ");
             con.Close();
         }
         catch (Exception e)
@@ -391,14 +422,16 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             DeleteMessages(chat.ChatId, contactId);
         }
 
-        await InsertSql($"Delete Contact where ContactId Collate Latin1_General_CS_AS = '{contactId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
+        await InsertSql(
+            $"Delete Contact where ContactId Collate Latin1_General_CS_AS = '{contactId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
     }
 
 
     [HttpDelete("DeleteMessages")]
     public async void DeleteMessages(string chatId, string userId)
     {
-        await InsertSql($"Delete Message where ChatId Collate Latin1_General_CS_AS = '{chatId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
+        await InsertSql(
+            $"Delete Message where ChatId Collate Latin1_General_CS_AS = '{chatId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
         await InsertSql($"Delete Chat where ChatId Collate Latin1_General_CS_AS = '{chatId}'");
     }
 
@@ -477,24 +510,26 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         }
     }
 
-     public async Task<List<string>> GetChatIds(string userId)
-     {
-         var list = new List<string>();
-         try
-         {
-             var con = new SqlConnection(connectionString);
-             con.Open();
-             list = con.Query<string>(
-                 $"Select ChatId from Chat where UserId Collate Latin1_General_CS_AS = '{userId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}'").ToList();
-             con.Close();
-         }
-         catch (Exception e)
-         {
-             Console.WriteLine(e);
-             return new List<string>();
-         }
-              return list;
-     }
+    public async Task<List<string>> GetChatIds(string userId)
+    {
+        var list = new List<string>();
+        try
+        {
+            var con = new SqlConnection(connectionString);
+            con.Open();
+            list = con.Query<string>(
+                    $"Select ChatId from Chat where UserId Collate Latin1_General_CS_AS = '{userId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}'")
+                .ToList();
+            con.Close();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return new List<string>();
+        }
+
+        return list;
+    }
 
     private async Task<bool> CheckIfContactUsed(string userId, string contactId)
     {
@@ -529,8 +564,10 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
     {
         var myServer = Environment.MachineName;
         connectionString =
-            @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
+            // @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True"; 
+            @$"Server={myServer};Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
     }
+    
 
     private class Unsubscribe : IDisposable
     {

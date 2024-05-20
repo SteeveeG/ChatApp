@@ -1,16 +1,12 @@
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security;
 using System.Web;
-using System.Windows;
-using System.Windows.Controls;
 using ChatApp.ApiHandler;
 using ChatApp.CustomMessageBox;
 using ChatApp.Settings.SettingsInput;
 using Library.Enum;
 using Library.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Win32;
 using File = System.IO.File;
 
@@ -97,8 +93,22 @@ public class SettingsViewModel : ViewModelBase
     }
 
 
+    private async Task MakeDirectory()
+    {
+        Directory.CreateDirectory("Pb");
+        var fspng = File.Create(@"Pb\pb.png");
+        fspng.Close();
+        var fsjpg = File.Create(@"Pb\pb.jpg");
+        fsjpg.Close();
+    }
+
     public async void ChangeProfilePic()
     {
+        if (!Directory.Exists("Pb"))
+        {
+            await MakeDirectory();
+        }
+
         try
         {
             string mediaType;
@@ -107,6 +117,7 @@ public class SettingsViewModel : ViewModelBase
             {
                 return;
             }
+
             var fi = new FileInfo(path);
             if (path.Contains(".jpg"))
             {
@@ -123,6 +134,7 @@ public class SettingsViewModel : ViewModelBase
                 CustomMessageBoxHandler.Create("Error");
                 return;
             }
+
             using (var content = new MultipartFormDataContent())
             {
                 var client = new HttpClient();
@@ -132,6 +144,18 @@ public class SettingsViewModel : ViewModelBase
                 filecontent.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
                 content.Add(filecontent, "file", Path.GetFileName(path));
                 HttpResponseMessage response = await client.PostAsync("Sql/PostProfilePic", content);
+
+
+                byte[] mybytearray;
+
+           
+               var result = response.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
+               
+               mybytearray=Convert.FromBase64String(result);
+                
+               //test path :)
+               await File.WriteAllBytesAsync(@"pb.png", mybytearray);
+
             }
         }
         catch

@@ -167,7 +167,7 @@ public class MainViewModel : ViewModelBase
         var converteduserId = HttpUtility.UrlEncode(user.UserId);
         Contacts = await Api.GetIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
         var Usernames = await Api.GetIn<List<string>>($"Sql/GetContactNames?userId={converteduserId}");
-
+        if(Contacts == null){return;}
         for (var i = 0; i < Contacts.Count; i++)
         {
             var id = Contacts[i].UserId == user.UserId ? Contacts[i].CreatedContactUserId : Contacts[i].UserId;
