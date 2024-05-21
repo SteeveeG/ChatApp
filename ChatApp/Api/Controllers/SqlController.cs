@@ -1,11 +1,8 @@
 using System.Data.SqlClient;
-using System.Data.SqlTypes;
-using System.Reflection.Metadata;
-using System.Windows.Controls;
+using System.Runtime.InteropServices.ComTypes;
 using Dapper;
 using Library.Model;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Win32.SafeHandles;
 using Type = Library.Enum.Type;
 
 namespace Api.Controllers;
@@ -91,22 +88,27 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
     }
 
     [HttpPost("PostProfilePic")]
-    public async Task<byte[]> PostProfilePic(IFormFile file)
+    public async Task<byte[]> PostProfilePic(string userId, IFormFile file)
     {
-        
-
-        Console.WriteLine();
         var file1 = file;
 
         var length = file1.Length;
         if (length < 0)
             return Array.Empty<byte>();
-
         await using var fileStream = file1.OpenReadStream();
         var bytes = new byte[length];
         await fileStream.ReadAsync(bytes, 0, (int)file1.Length);
         fileStream.Close();
+        var type = file1.ContentType.Contains("png") ? "png" : "jpg";
+        var con = new SqlConnection(connectionString);
+        con.Open();
+        var rs = bytes.Aggregate("{", (current, b) => current + "," + b);
+        rs = rs.Remove(1,1);
+        rs += "}";
+        con.Query($"update AccUser Set ProfilePicByte = '{rs}', ProfilePicType = '{type}' where UserId Collate Latin1_General_CS_AS = '{userId}'");
+        con.Close();
         return bytes;
+        
     }
 
     [HttpPost("CreateContact")]
@@ -191,7 +193,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             con.Close();
             return true;
         }
-        catch (Exception e)
+        catch (Exception e) 
         {
             Console.WriteLine(e);
             return false;
@@ -510,26 +512,26 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         }
     }
 
-    public async Task<List<string>> GetChatIds(string userId)
-    {
-        var list = new List<string>();
-        try
-        {
-            var con = new SqlConnection(connectionString);
-            con.Open();
-            list = con.Query<string>(
-                    $"Select ChatId from Chat where UserId Collate Latin1_General_CS_AS = '{userId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}'")
-                .ToList();
-            con.Close();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            return new List<string>();
-        }
-
-        return list;
-    }
+     public async Task<List<string>> GetChatIds(string userId)
+     {
+         var list = new List<string>();
+         try
+         {
+             var con = new SqlConnection(connectionString);
+             con.Open();
+             list = con.Query<string>(
+                     $"Select ChatId from Chat where UserId Collate Latin1_General_CS_AS = '{userId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}'")
+                 .ToList();
+             con.Close();
+         }
+         catch (Exception e)
+         {
+             Console.WriteLine(e);
+             return new List<string>();
+         }
+    
+         return list;
+     }
 
     private async Task<bool> CheckIfContactUsed(string userId, string contactId)
     {
@@ -564,8 +566,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
     {
         var myServer = Environment.MachineName;
         connectionString =
-            // @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True"; 
-            @$"Server={myServer};Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
+              @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True"; 
+        // @$"Server={myServer};Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
     }
     
 

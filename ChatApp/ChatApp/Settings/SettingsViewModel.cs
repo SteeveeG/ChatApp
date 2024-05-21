@@ -143,18 +143,15 @@ public class SettingsViewModel : ViewModelBase
                 var filecontent = new ByteArrayContent(filearray);
                 filecontent.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
                 content.Add(filecontent, "file", Path.GetFileName(path));
-                HttpResponseMessage response = await client.PostAsync("Sql/PostProfilePic", content);
-
-
+                var converteduserId = HttpUtility.UrlEncode(accUser.UserId);
+                var response = await client.PostAsync($"Sql/PostProfilePic?userId={converteduserId}", content);
                 byte[] mybytearray;
-
-           
                var result = response.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
                
                mybytearray=Convert.FromBase64String(result);
                 
                //test path :)
-               await File.WriteAllBytesAsync(@"pb.png", mybytearray);
+               // await File.WriteAllBytesAsync(@"pb.png", mybytearray);
 
             }
         }
