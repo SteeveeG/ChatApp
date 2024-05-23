@@ -17,6 +17,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition />
         </Grid.RowDefinitions>
 
@@ -37,14 +38,30 @@
         <Label Grid.Row="2" Height="40" Content="{Binding OwnUsername}"
                Foreground="GhostWhite"
                FontFamily="{StaticResource SwIsop1}" FontSize="20" Margin="0,10" />
-        <Button Grid.Row="3" Style="{StaticResource Button}" Height="40" Margin="0,10"
+        
+        <Grid Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Column="0" Height="40" Content="Profile Picture:" Foreground="GhostWhite"
+                   FontFamily="{StaticResource SwIsop1}" FontSize="20" Margin="0,10"  />
+            <Ellipse Grid.Column="1" Width="110" Height="110"  Margin="20,0,0,0">
+                <Ellipse.Fill>
+                    <ImageBrush ImageSource="{Binding PbSource}"/>
+                </Ellipse.Fill>
+            </Ellipse>
+        </Grid>
+        
+        <Button Grid.Row="4" Style="{StaticResource Button}" Height="40" Margin="0,10"
                 Width="300"
                 HorizontalAlignment="Left" Content="Add New Contact" Click="OpenNewContactWindow" />
 
-        <Label Grid.Row="4" Content="Edit Contacts :" Foreground="GhostWhite" FontSize="20"
+        <Label Grid.Row="5" Content="Edit Contacts :" Foreground="GhostWhite" FontSize="20"
                FontFamily="{StaticResource SwIsop1}" />
 
-        <ListBox Grid.Row="5"
+        <ListBox Grid.Row="6"
                  Background="#2d3e50" BorderBrush="Transparent" SelectionMode="Single"
                  HorizontalContentAlignment="Stretch"
                  ItemsSource="{Binding Contacts}">

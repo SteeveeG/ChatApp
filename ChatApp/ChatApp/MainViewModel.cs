@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -33,7 +34,7 @@ public class MainViewModel : ViewModelBase
     public Func<string, Task<string>> GetChatIdFunc { get; set; }
 
     public MainViewModel()
-    { 
+    {
         ChatViewModel = new ChatViewModel();
         ChatListViewModel = new ChatListViewModel(ChatViewModel);
         HomeNavbarViewModel = new HomeNavbarViewModel();
@@ -43,6 +44,7 @@ public class MainViewModel : ViewModelBase
 
     public MainViewModel(AccUser acc)
     {
+        SetPb(ref acc);
         user = acc;
         curentChatIndex = 0;
         GetChatIdFunc = GetChatId;
@@ -55,6 +57,38 @@ public class MainViewModel : ViewModelBase
         ContactViewModel = new ContactViewModel(this, acc);
         GetContacts();
         ConnectToGrpc();
+    }
+
+    private void SetPb(ref AccUser acc)
+    {
+        var list =new List<byte>();
+        var str = string.Empty;
+        foreach (var bytechar in acc.ProfilePicByte)
+        {
+            if (bytechar != '{' && bytechar != ',')
+            {
+                str += bytechar;
+            }
+            else if (bytechar == ',')
+            {
+                list.Add(Convert.ToByte(str));
+                str = string.Empty;
+            }
+            
+        }
+        acc.ProfilePicByte= string.Empty;
+        var array = list.ToArray();
+        list.Clear();
+        
+         switch (acc.ProfilePicType)
+         {
+             case "png":
+                 File.WriteAllBytes(@"..\..\..\Pb\pb.png", array);
+                 break;
+             case "jpg":
+                 File.WriteAllBytes(@"..\..\..\Pb\pb.jpg", array);
+                 break;
+         }
     }
 
     private void ConnectToGrpc()
@@ -91,9 +125,9 @@ public class MainViewModel : ViewModelBase
         {
             ChatViewModel.Messages.Add(new MessageViewModel(message.Content, false));
         }
+
         var index = ChatListViewModel.List.IndexOf(
-            ChatListViewModel.List.FirstOrDefault(p
-                => p.ContactId == message.UserId));
+            ChatListViewModel.List.FirstOrDefault(p => p.ContactId == message.UserId));
         Messages[index].Add(message);
         ChatListViewModel.List[index].LastMessage = message.Content;
         ChatListViewModel.List[index].LastMessageTime = message.Time;
@@ -167,7 +201,11 @@ public class MainViewModel : ViewModelBase
         var converteduserId = HttpUtility.UrlEncode(user.UserId);
         Contacts = await Api.GetIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
         var Usernames = await Api.GetIn<List<string>>($"Sql/GetContactNames?userId={converteduserId}");
-        if(Contacts == null){return;}
+        if (Contacts == null)
+        {
+            return;
+        }
+
         for (var i = 0; i < Contacts.Count; i++)
         {
             var id = Contacts[i].UserId == user.UserId ? Contacts[i].CreatedContactUserId : Contacts[i].UserId;

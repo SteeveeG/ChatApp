@@ -25,6 +25,17 @@
       <Resource Include="Assets\SWLink.ttf">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Resource>
+      <None Remove="Pb\pb.jpg" />
+      <None Remove="Pb\pb.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="Pb\pb.jpg" />
+      <Content Include="Pb\pb.png" />
     </ItemGroup>
 
 </Project>

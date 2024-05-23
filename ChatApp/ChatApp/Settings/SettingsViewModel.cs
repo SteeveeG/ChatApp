@@ -7,8 +7,13 @@ using ChatApp.CustomMessageBox;
 using ChatApp.Settings.SettingsInput;
 using Library.Enum;
 using Library.Model;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Win32;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SkiaSharp;
 using File = System.IO.File;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace ChatApp.Settings;
 
@@ -92,6 +97,27 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
+    private Stream Resize(Stream imgStream, string extension, int height , int width)
+    {
+        using (var skImage = SKBitmap.Decode(imgStream))
+        {
+            using (var scaledBitmap = skImage.Resize(new SKImageInfo(width, height), SKFilterQuality.Low))
+            {
+                using (var image = SKImage.FromBitmap(scaledBitmap))
+                {
+                    using (var encodedImage = image.Encode(MimeTypeMapping.GetSkiaSharpImageFormatFromExtension(extension), 50))
+                    {
+                        var stream = new MemoryStream();
+                        encodedImage.SaveTo(stream);
+                        stream.Seek(0, SeekOrigin.Begin);
+                        return stream;
+                    }
+                }
+            }
+        }
+    }
+    
+
 
     private async Task MakeDirectory()
     {
@@ -111,23 +137,23 @@ public class SettingsViewModel : ViewModelBase
 
         try
         {
+            string copypath;
             string mediaType;
-            var path = s("Profile Picture", FileFormat.PNG, FileFormat.JPG);
+            var path = SelectFile("Profile Picture", FileFormat.PNG, FileFormat.JPG);
             if (path == null)
             {
                 return;
             }
-
-            var fi = new FileInfo(path);
+ 
             if (path.Contains(".jpg"))
             {
-                fi.CopyTo(@"Pb\pb.jpg", true);
                 mediaType = "image/jpeg";
+                copypath = @"..\..\..\Pb\pb.jpg";
             }
             else if (path.Contains(".png"))
             {
-                fi.CopyTo(@"Pb\pb.png", true);
                 mediaType = "image/png";
+                copypath = @"..\..\..\Pb\pb.png";
             }
             else
             {
@@ -135,24 +161,41 @@ public class SettingsViewModel : ViewModelBase
                 return;
             }
 
+            var s = new FileStream(path, FileMode.OpenOrCreate);
+
+            var resultBytes = Resize(s , "pg", 150,150);
+            var buffer = new byte[16*1024];
+            var res = Array.Empty<byte>();
+            using (var ms = new MemoryStream())
+            {
+                int read;
+                while ((read = resultBytes.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+
+                res = ms.ToArray();
+            }
+
+            await File.WriteAllBytesAsync(copypath, res);
+            
             using (var content = new MultipartFormDataContent())
             {
                 var client = new HttpClient();
                 client.BaseAddress = new Uri("https://localhost:7049");
-                var filearray = File.ReadAllBytes(path);
+                var filearray = await File.ReadAllBytesAsync(copypath);     
                 var filecontent = new ByteArrayContent(filearray);
                 filecontent.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
                 content.Add(filecontent, "file", Path.GetFileName(path));
                 var converteduserId = HttpUtility.UrlEncode(accUser.UserId);
                 var response = await client.PostAsync($"Sql/PostProfilePic?userId={converteduserId}", content);
-                byte[] mybytearray;
-               var result = response.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
-               
-               mybytearray=Convert.FromBase64String(result);
-                
-               //test path :)
-               // await File.WriteAllBytesAsync(@"pb.png", mybytearray);
 
+                byte[] mybytearray;
+                var result = response.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
+
+                mybytearray = Convert.FromBase64String(result);
+
+                await File.WriteAllBytesAsync(copypath, mybytearray);
             }
         }
         catch
@@ -161,7 +204,7 @@ public class SettingsViewModel : ViewModelBase
         }
     }
 
-    public string s(string header, params FileFormat[] formats)
+    public string SelectFile(string header, params FileFormat[] formats)
     {
         var openFileDialog = new OpenFileDialog();
 

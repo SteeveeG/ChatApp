@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Net.Http;
 using System.Web;
 using System.Windows;
@@ -18,6 +19,7 @@ public class ContactViewModel : ViewModelBase
     public DelegateCommand CopyUserIdCommand { get; set; }
     private string userId;
     private string copyText;
+    private string pbSource;
 
     public ContactViewModel(MainViewModel mainViewModel, AccUser accUser = null)
     {
@@ -34,16 +36,17 @@ public class ContactViewModel : ViewModelBase
         Contacts = new ObservableCollection<EditContactViewModel>();
         CopyUserIdCommand = new DelegateCommand(CopyUserId);
         CopyText = "Copy User-Id";
+        PbSource = @$"../Pb/pb.{AccUser.ProfilePicType}";
     }
 
     private void CopyUserId()
     {
       Clipboard.SetText(userId);
       CopyText = "Copied";
-      _ = OldText();
+      OldText();
 
     }
-    private async Task OldText()
+    private async void OldText()
     {
         await Task.Delay(2000);  
         CopyText = "Copy User-Id";
@@ -106,6 +109,17 @@ public class ContactViewModel : ViewModelBase
         {
             if (value == copyText) return;
             copyText = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string PbSource
+    {
+        get => pbSource;
+        set
+        {
+            if (value == pbSource) return;
+            pbSource = value;
             OnPropertyChanged();
         }
     }
