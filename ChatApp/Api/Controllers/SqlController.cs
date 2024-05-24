@@ -157,8 +157,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
                     $"Select COUNT(*) from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'");
             } while (count.ToArray()[0] > 0);
 
-            con.Query("Insert Into AccUser (UserId ,Username ,Password)" +
-                      $"VALUES ('{userId}','{username}','{password}')");
+            con.Query("Insert Into AccUser (UserId ,Username ,Password , ProfilePicByte , ProfilePicType)" +
+                      $"VALUES ('{userId}','{username}','{password}', '','')");
             var account =
                 con.Query<AccUser>($"Select * from AccUser where UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
@@ -349,6 +349,50 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
 
         return contactsNames;
     }
+    
+    
+    [HttpGet("GetContactNamesAndPb")]
+    public async Task<List<Tuple<string,string,string>>> GetContactNamesAndPb(string userId)
+    {
+        IEnumerable<Contact> contacts = new List<Contact>();
+        var contactsdata = new List<AccUser>();
+        var contactsTuple = new List<Tuple<string,string,string>>();
+        try
+        {
+            var con = new SqlConnection(connectionString);
+            con.Open();
+            contacts = con.Query<Contact>(
+                $"Select * from Contact where UserId Collate Latin1_General_CS_AS = '{userId}'or CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}'");
+            foreach (var contact in contacts)
+            {
+                if (contact.CreatedContactUserId == userId)
+                {
+                    contactsdata.Add(con
+                        .Query<AccUser>(
+                            $"Select Username, ProfilePicByte , ProfilePicType from AccUser where UserId Collate Latin1_General_CS_AS = '{contact.UserId}' order by UserId ASC  ")
+                        .ToArray()[0]);
+                }
+                else if (contact.UserId == userId)
+                {
+                    contactsdata.Add(con
+                        .Query<AccUser>(
+                            $"Select Username, ProfilePicByte , ProfilePicType from AccUser where UserId Collate Latin1_General_CS_AS = '{contact.CreatedContactUserId}' order by UserId ASC ")
+                        .ToArray()[0]);
+                }
+            }
+            con.Close();
+            contactsTuple.AddRange(contactsdata.Select(contactdata => new Tuple<string, string, string>(contactdata.UserId, contactdata.ProfilePicByte, contactdata.ProfilePicType)));
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+        return contactsTuple;
+    }
+
+    
+    
 
 
     [HttpGet("GetUsername")]

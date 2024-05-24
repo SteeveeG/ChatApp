@@ -25,4 +25,5 @@ public partial class ContactControl : UserControl
         newContact.ViewModel = new NewContactViewModel(ViewModel.AccUser , value => ViewModel.UpdateContactList(value));
         newContact.Show();
     }
+    
 }

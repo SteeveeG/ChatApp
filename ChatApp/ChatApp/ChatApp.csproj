@@ -34,8 +34,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Content Include="Pb\pb.jpg" />
-      <Content Include="Pb\pb.png" />
+      <Resource Include="Pb\pb.jpg" />
+      <Resource Include="Pb\pb.png" />
     </ItemGroup>
 
 </Project>

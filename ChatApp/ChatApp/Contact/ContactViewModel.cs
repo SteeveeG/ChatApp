@@ -1,9 +1,5 @@
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Net.Http;
-using System.Web;
 using System.Windows;
-using ChatApp.ApiHandler;
 using ChatApp.Contact.EditContact;
 using Library.Model;
 

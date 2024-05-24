@@ -14,6 +14,7 @@ using ChatApp.Contact.EditContact;
 using ChatApp.HomeNavBar;
 using ChatApp.Settings;
 using Library.Model;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Type = Library.Enum.Type;
 
 namespace ChatApp;
@@ -58,9 +59,17 @@ public class MainViewModel : ViewModelBase
         GetContacts();
         ConnectToGrpc();
     }
+    public void NewPb(string mediaType)
+    {
+        ContactViewModel.PbSource = mediaType.Contains("png") ? "../Pb/pb.png" : "../Pb/pb.jpg";
+    }
 
     private void SetPb(ref AccUser acc)
     {
+        if (string.IsNullOrEmpty(acc.ProfilePicByte))
+        {
+         return;   
+        }
         var list =new List<byte>();
         var str = string.Empty;
         foreach (var bytechar in acc.ProfilePicByte)
@@ -200,7 +209,7 @@ public class MainViewModel : ViewModelBase
     {
         var converteduserId = HttpUtility.UrlEncode(user.UserId);
         Contacts = await Api.GetIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
-        var Usernames = await Api.GetIn<List<string>>($"Sql/GetContactNames?userId={converteduserId}");
+        var data = await Api.GetIn<List<Tuple<string,string,string>>>($"Sql/GetContactNamesAndPb?userId={converteduserId}");
         if (Contacts == null)
         {
             return;
@@ -209,8 +218,8 @@ public class MainViewModel : ViewModelBase
         for (var i = 0; i < Contacts.Count; i++)
         {
             var id = Contacts[i].UserId == user.UserId ? Contacts[i].CreatedContactUserId : Contacts[i].UserId;
-            ChatListViewModel.List.Add(new ChatListItemViewModel(Contacts[i], ChatListViewModel, Usernames[i], id));
-            ContactViewModel.Contacts.Add(new EditContactViewModel(Usernames[i], id,
+            ChatListViewModel.List.Add(new ChatListItemViewModel(Contacts[i], ChatListViewModel, data[i].Item1, id , data[i].Item2));
+            ContactViewModel.Contacts.Add(new EditContactViewModel(data[i].Item1, id,
                 ContactViewModel.Delete));
             var chatId = await GetChatId(id, user.UserId);
             //Todo Returns Null 
@@ -227,9 +236,9 @@ public class MainViewModel : ViewModelBase
             await ControlCreateChatId(contact);
         }
 
-        var name = await Api.GetIn<string>($"Sql/GetUsername?userId={id}");
-        ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel, name, id));
-        ContactViewModel.Contacts.Add(new EditContactViewModel(name, id, ContactViewModel.Delete));
+        var name = await Api.GetIn<List<Tuple<string,string,string>>>($"Sql/GetContactNamesAndPb?userId={id}");
+        ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel, name[0].Item1, id,name[0].Item2));
+        ContactViewModel.Contacts.Add(new EditContactViewModel(name[0].Item1, id, ContactViewModel.Delete));
         Messages.Add(new List<Message>());
     }
 
@@ -274,4 +283,6 @@ public class MainViewModel : ViewModelBase
             OnPropertyChanged();
         }
     }
+
+ 
 }

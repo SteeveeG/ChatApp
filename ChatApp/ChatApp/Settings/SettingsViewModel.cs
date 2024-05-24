@@ -116,25 +116,8 @@ public class SettingsViewModel : ViewModelBase
             }
         }
     }
-    
-
-
-    private async Task MakeDirectory()
-    {
-        Directory.CreateDirectory("Pb");
-        var fspng = File.Create(@"Pb\pb.png");
-        fspng.Close();
-        var fsjpg = File.Create(@"Pb\pb.jpg");
-        fsjpg.Close();
-    }
-
     public async void ChangeProfilePic()
     {
-        if (!Directory.Exists("Pb"))
-        {
-            await MakeDirectory();
-        }
-
         try
         {
             string copypath;
@@ -144,7 +127,6 @@ public class SettingsViewModel : ViewModelBase
             {
                 return;
             }
- 
             if (path.Contains(".jpg"))
             {
                 mediaType = "image/jpeg";
@@ -161,11 +143,10 @@ public class SettingsViewModel : ViewModelBase
                 return;
             }
 
-            var s = new FileStream(path, FileMode.OpenOrCreate);
-
-            var resultBytes = Resize(s , "pg", 150,150);
+            var fileStream = new FileStream(path, FileMode.OpenOrCreate);
+            var resultBytes = Resize(fileStream , "pg", 150,150);
             var buffer = new byte[16*1024];
-            var res = Array.Empty<byte>();
+            var PbArray = Array.Empty<byte>();
             using (var ms = new MemoryStream())
             {
                 int read;
@@ -174,10 +155,10 @@ public class SettingsViewModel : ViewModelBase
                     ms.Write(buffer, 0, read);
                 }
 
-                res = ms.ToArray();
+                PbArray = ms.ToArray();
             }
 
-            await File.WriteAllBytesAsync(copypath, res);
+            await File.WriteAllBytesAsync(copypath, PbArray);
             
             using (var content = new MultipartFormDataContent())
             {
@@ -189,14 +170,13 @@ public class SettingsViewModel : ViewModelBase
                 content.Add(filecontent, "file", Path.GetFileName(path));
                 var converteduserId = HttpUtility.UrlEncode(accUser.UserId);
                 var response = await client.PostAsync($"Sql/PostProfilePic?userId={converteduserId}", content);
-
                 byte[] mybytearray;
                 var result = response.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
-
                 mybytearray = Convert.FromBase64String(result);
-
                 await File.WriteAllBytesAsync(copypath, mybytearray);
             }
+
+            mainViewModel.NewPb(mediaType);
         }
         catch
         {
