@@ -1,7 +1,4 @@
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
 using ChatApp.ApiHandler;
 using ChatApp.CustomMessageBox;
 using ChatApp.LoginRegisterMenu.LoginControl;
@@ -43,7 +40,7 @@ public class LoginRegisterMenuViewModel : ViewModelBase
     public async Task<AccUser> ControlLogin()
     {
         var user = await Login(LoginViewModel.Name, LoginViewModel.Password);
-        if (user == null)
+        if (user.UserId == null)
         {
             LoginViewModel.LoginFailed();
             return null;

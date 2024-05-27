@@ -7,13 +7,8 @@ using ChatApp.CustomMessageBox;
 using ChatApp.Settings.SettingsInput;
 using Library.Enum;
 using Library.Model;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Win32;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SkiaSharp;
-using File = System.IO.File;
-using Image = SixLabors.ImageSharp.Image;
 
 namespace ChatApp.Settings;
 
@@ -116,11 +111,12 @@ public class SettingsViewModel : ViewModelBase
             }
         }
     }
-    public async void ChangeProfilePic()
+
+    private async void ChangeProfilePic()
     {
         try
         {
-            string copypath;
+            string result;
             string mediaType;
             var path = SelectFile("Profile Picture", FileFormat.PNG, FileFormat.JPG);
             if (path == null)
@@ -130,12 +126,10 @@ public class SettingsViewModel : ViewModelBase
             if (path.Contains(".jpg"))
             {
                 mediaType = "image/jpeg";
-                copypath = @"..\..\..\Pb\pb.jpg";
             }
             else if (path.Contains(".png"))
             {
                 mediaType = "image/png";
-                copypath = @"..\..\..\Pb\pb.png";
             }
             else
             {
@@ -157,26 +151,20 @@ public class SettingsViewModel : ViewModelBase
 
                 PbArray = ms.ToArray();
             }
-
-            await File.WriteAllBytesAsync(copypath, PbArray);
             
             using (var content = new MultipartFormDataContent())
             {
                 var client = new HttpClient();
                 client.BaseAddress = new Uri("https://localhost:7049");
-                var filearray = await File.ReadAllBytesAsync(copypath);     
-                var filecontent = new ByteArrayContent(filearray);
+                var filecontent = new ByteArrayContent(PbArray);
                 filecontent.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
                 content.Add(filecontent, "file", Path.GetFileName(path));
                 var converteduserId = HttpUtility.UrlEncode(accUser.UserId);
                 var response = await client.PostAsync($"Sql/PostProfilePic?userId={converteduserId}", content);
-                byte[] mybytearray;
-                var result = response.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
-                mybytearray = Convert.FromBase64String(result);
-                await File.WriteAllBytesAsync(copypath, mybytearray);
+                result = response.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
             }
 
-            mainViewModel.NewPb(mediaType);
+            mainViewModel.NewPb(result);
         }
         catch
         {

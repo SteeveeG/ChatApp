@@ -1,9 +1,11 @@
 using System.Collections.ObjectModel;
+using System.Web;
 using ChatApp.Chat;
 using ChatApp.Chat.Messages;
 using ChatApp.ChatList.ChatListItem;
 using ChatApp.Contact.EditContact;
 using Library.Model;
+using Api = ChatApp.ApiHandler.Api;
 
 namespace ChatApp.ChatList;
 
@@ -32,11 +34,14 @@ public class ChatListViewModel : ViewModelBase
     }
     public async void Click(int index)
     {
-        ChatViewModel.HeaderViewModel.Name = List[index].Name;
+        var converted =  HttpUtility.UrlEncode(List[index].ContactId);
+        var accuser = await Api.GetIn<Tuple<string,string,string>>($"Sql/GetNamesAndPb?userId={converted}");
+        ChatViewModel.HeaderViewModel.Name = accuser.Item1;
         var chatId = await getChatId(List[index].ContactId);
         ChatViewModel.ChatId = chatId;
         var messages = getMessage(index);
         ChatViewModel.Messages = new ObservableCollection<MessageViewModel>();
+        ChatViewModel.HeaderViewModel.CreatePb(accuser.Item2);
         if (messages == null)
         {
             return;

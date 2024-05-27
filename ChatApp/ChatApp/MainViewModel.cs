@@ -4,6 +4,8 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Web;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ChatApp.ApiHandler;
 using ChatApp.Chat;
 using ChatApp.Chat.Messages;
@@ -14,7 +16,6 @@ using ChatApp.Contact.EditContact;
 using ChatApp.HomeNavBar;
 using ChatApp.Settings;
 using Library.Model;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Type = Library.Enum.Type;
 
 namespace ChatApp;
@@ -45,7 +46,8 @@ public class MainViewModel : ViewModelBase
 
     public MainViewModel(AccUser acc)
     {
-        SetPb(ref acc);
+        var bytestring = acc.ProfilePicByte;
+        acc.ProfilePicByte = string.Empty;
         user = acc;
         curentChatIndex = 0;
         GetChatIdFunc = GetChatId;
@@ -56,12 +58,29 @@ public class MainViewModel : ViewModelBase
         HomeNavbarViewModel = new HomeNavbarViewModel();
         SettingsViewModel = new SettingsViewModel(this, acc);
         ContactViewModel = new ContactViewModel(this, acc);
+
+        user.ProfilePicByte = bytestring;
+        bytestring = string.Empty;
+        SetPb(ref user);
         GetContacts();
         ConnectToGrpc();
     }
-    public void NewPb(string mediaType)
+    public void NewPb(string byteString)
     {
-        ContactViewModel.PbSource = mediaType.Contains("png") ? "../Pb/pb.png" : "../Pb/pb.jpg";
+        var imageSource = ContactViewModel.PbSource;
+        CreatePb(byteString , ref imageSource);
+        ContactViewModel.PbSource = imageSource;
+    }
+
+    private void CreatePb(string byteString ,ref ImageSource imageSource)
+    {
+        if (string.IsNullOrEmpty(byteString))
+        {
+            return;
+        }
+        var mybytearray = Convert.FromBase64String(byteString);
+        using var stream = new MemoryStream(mybytearray);
+        imageSource = BitmapFrame.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
     }
 
     private void SetPb(ref AccUser acc)
@@ -87,17 +106,12 @@ public class MainViewModel : ViewModelBase
         }
         acc.ProfilePicByte= string.Empty;
         var array = list.ToArray();
+        using (var stream = new MemoryStream(array))
+        {
+            ContactViewModel.PbSource = BitmapFrame.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
+        }
         list.Clear();
         
-         switch (acc.ProfilePicType)
-         {
-             case "png":
-                 File.WriteAllBytes(@"..\..\..\Pb\pb.png", array);
-                 break;
-             case "jpg":
-                 File.WriteAllBytes(@"..\..\..\Pb\pb.jpg", array);
-                 break;
-         }
     }
 
     private void ConnectToGrpc()
@@ -210,6 +224,7 @@ public class MainViewModel : ViewModelBase
         var converteduserId = HttpUtility.UrlEncode(user.UserId);
         Contacts = await Api.GetIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
         var data = await Api.GetIn<List<Tuple<string,string,string>>>($"Sql/GetContactNamesAndPb?userId={converteduserId}");
+     
         if (Contacts == null)
         {
             return;
@@ -235,10 +250,9 @@ public class MainViewModel : ViewModelBase
         {
             await ControlCreateChatId(contact);
         }
-
-        var name = await Api.GetIn<List<Tuple<string,string,string>>>($"Sql/GetContactNamesAndPb?userId={id}");
-        ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel, name[0].Item1, id,name[0].Item2));
-        ContactViewModel.Contacts.Add(new EditContactViewModel(name[0].Item1, id, ContactViewModel.Delete));
+        var name = await Api.GetIn<Tuple<string,string,string>>($"Sql/GetNamesAndPb?userId={id}");
+        ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel, name.Item1, id,name.Item2));
+        ContactViewModel.Contacts.Add(new EditContactViewModel(name.Item1, id, ContactViewModel.Delete));
         Messages.Add(new List<Message>());
     }
 

@@ -1,5 +1,4 @@
 using System.Windows.Media;
-using ChatApp.Chat.Messages;
 using Library.Model;
 
 namespace ChatApp.Chat.TextBox;

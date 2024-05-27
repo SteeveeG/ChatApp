@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Media;
 using ChatApp.Contact.EditContact;
 using Library.Model;
 
@@ -15,7 +16,7 @@ public class ContactViewModel : ViewModelBase
     public DelegateCommand CopyUserIdCommand { get; set; }
     private string userId;
     private string copyText;
-    private string pbSource;
+    private ImageSource pbSource;
 
     public ContactViewModel(MainViewModel mainViewModel, AccUser accUser = null)
     {
@@ -32,7 +33,6 @@ public class ContactViewModel : ViewModelBase
         Contacts = new ObservableCollection<EditContactViewModel>();
         CopyUserIdCommand = new DelegateCommand(CopyUserId);
         CopyText = "Copy User-Id";
-        PbSource = @$"../Pb/pb.{AccUser.ProfilePicType}";
     }
 
     private void CopyUserId()
@@ -109,7 +109,7 @@ public class ContactViewModel : ViewModelBase
         }
     }
 
-    public string PbSource
+    public ImageSource PbSource
     {
         get => pbSource;
         set

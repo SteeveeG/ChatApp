@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text.Json;
 using ChatApp.Chat.Header;
 using ChatApp.Chat.Messages;
 using ChatApp.Chat.TextBox;
@@ -26,7 +25,7 @@ public
         this.action = action;
         accUser = acc;
         Messages = new ObservableCollection<MessageViewModel>();
-        HeaderViewModel = new HeaderViewModel(this, "");
+        HeaderViewModel = new HeaderViewModel(this, "" );
         TextBoxViewModel = new TextBoxViewModel(this, accUser);
     }
 

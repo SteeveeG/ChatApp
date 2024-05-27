@@ -14,7 +14,12 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
 
-        <Ellipse Grid.Column="0" Fill="Maroon" Style="{StaticResource ProfilePicHeader}"/>
+        <Ellipse Grid.Column="0" Style="{StaticResource ProfilePicHeader}">
+            <Ellipse.Fill>
+                <ImageBrush ImageSource="{Binding ImageSource}">
+                </ImageBrush>
+            </Ellipse.Fill>
+        </Ellipse>
         <TextBlock Grid.Column="1" Style="{StaticResource MessageHeader }" 
                    Text="{Binding Name}" />
         <Border Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource HeaderBorder }" />

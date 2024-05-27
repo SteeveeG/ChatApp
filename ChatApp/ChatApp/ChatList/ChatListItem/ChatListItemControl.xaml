@@ -15,10 +15,7 @@
         <Ellipse Grid.Column="0"
                  Width="50" Height="50" Margin="5">
             <Ellipse.Fill>
-                <ImageBrush>
-                    <ImageBrush.ImageSource>
-                        <BitmapImage DecodePixelHeight="250" DecodePixelWidth="250" StreamSource="{Binding Source}"/>
-                    </ImageBrush.ImageSource>
+                <ImageBrush ImageSource="{Binding ImageSource}">
                 </ImageBrush>
             </Ellipse.Fill>
         </Ellipse>

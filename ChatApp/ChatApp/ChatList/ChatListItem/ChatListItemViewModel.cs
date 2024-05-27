@@ -1,4 +1,7 @@
 using System.IO;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+
 namespace ChatApp.ChatList.ChatListItem;
 
 public class ChatListItemViewModel : ViewModelBase
@@ -9,6 +12,8 @@ public class ChatListItemViewModel : ViewModelBase
     private string contactId;
     private string pbSource;
     private MemoryStream source;
+    private byte[] bytes;
+    private ImageSource imageSource;
     public ChatListViewModel ChatListViewModel { get; set; }
 
     public ChatListItemViewModel(Library.Model.Contact contact, ChatListViewModel chatListViewModel, string username, string id, string byteString)
@@ -18,11 +23,15 @@ public class ChatListItemViewModel : ViewModelBase
         LastMessage =  contact.LastMessage;
         LastMessageTime =  contact.LastMessageTime;
         ContactId =  id;
-        Test(byteString);
+        CreatePb(byteString);
     }
 
-    private void Test(string byteString)
+    public void CreatePb(string byteString)
     {
+        if (string.IsNullOrEmpty(byteString))
+        {
+            return;
+        }
         var list =new List<byte>();
         var str = string.Empty;
         foreach (var bytechar in byteString)
@@ -38,16 +47,29 @@ public class ChatListItemViewModel : ViewModelBase
             }
             
         }
-        var array = list.ToArray();
-        Source = new MemoryStream(array);
+        Bytes = list.ToArray();
+        using var stream = new MemoryStream(Bytes);
+        ImageSource = BitmapFrame.Create(stream, BitmapCreateOptions.None, BitmapCacheOption.OnLoad);
     }
-    public MemoryStream Source
+
+    public ImageSource ImageSource
     {
-        get => source;
+        get => imageSource;
         set
         {
-            if (Equals(value, source)) return;
-            source = value;
+            if (Equals(value, imageSource)) return;
+            imageSource = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private byte[] Bytes
+    {
+        get => bytes;
+        set
+        {
+            if (Equals(value, bytes)) return;
+            bytes = value;
             OnPropertyChanged();
         }
     }

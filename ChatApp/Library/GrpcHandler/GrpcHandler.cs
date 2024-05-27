@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Grpc.Protos;
-using Library.Model;
 
 namespace Library.GrpcHandler;
 

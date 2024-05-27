@@ -1,8 +1,6 @@
-﻿using System.Net.Security;
-using Grpc.Core;
+﻿using Grpc.Core;
 using Grpc.Net.Client;
 using Grpc.Protos;
-using Microsoft.AspNetCore.Identity;
 
 var set = new Action<msg>(s);
 var channel = GrpcChannel.ForAddress("https://localhost:7277/");
