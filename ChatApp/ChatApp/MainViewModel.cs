@@ -58,7 +58,6 @@ public class MainViewModel : ViewModelBase
         HomeNavbarViewModel = new HomeNavbarViewModel();
         SettingsViewModel = new SettingsViewModel(this, acc);
         ContactViewModel = new ContactViewModel(this, acc);
-
         user.ProfilePicByte = bytestring;
         bytestring = string.Empty;
         SetPb(ref user);
@@ -133,12 +132,26 @@ public class MainViewModel : ViewModelBase
             case Type.Message:
                 Application.Current.Dispatcher.Invoke(() => UpdateMessages(sub.Message));
                 break;
-            case Type.DeleteContact:
-                break;
-            case Type.DeleteAccount:
+            case Type.Delete:
+                Application.Current.Dispatcher.Invoke(() => UpdateDeleted(sub.AccUser.UserId));
                 break;
             default:
                 return;
+        }
+    }
+
+    private void UpdateDeleted(string userId)
+    {
+        foreach (var contact in contacts)
+        {
+            if (contact.UserId != userId)
+            {
+                continue;
+            }
+            var ds =  ChatListViewModel.List.FirstOrDefault(s => s.ContactId == userId);
+            var ind = ChatListViewModel.List.IndexOf(ds);
+            ChatListViewModel.List[ind].Name = "Deleted Contact";
+            ChatListViewModel.List[ind].ContactId = "FFFFFFF" + ChatListViewModel.List[ind].ContactId;
         }
     }
 
@@ -223,18 +236,19 @@ public class MainViewModel : ViewModelBase
     {
         var converteduserId = HttpUtility.UrlEncode(user.UserId);
         Contacts = await Api.GetIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
-        var data = await Api.GetIn<List<Tuple<string,string,string>>>($"Sql/GetContactNamesAndPb?userId={converteduserId}");
+        var data = await Api.GetIn<List<Tuple<string,string,string,string>>>($"Sql/GetContactNamesAndPb?userId={converteduserId}");
      
         if (Contacts == null)
         {
             return;
         }
-
+        
         for (var i = 0; i < Contacts.Count; i++)
         {
             var id = Contacts[i].UserId == user.UserId ? Contacts[i].CreatedContactUserId : Contacts[i].UserId;
-            ChatListViewModel.List.Add(new ChatListItemViewModel(Contacts[i], ChatListViewModel, data[i].Item1, id , data[i].Item2));
-            ContactViewModel.Contacts.Add(new EditContactViewModel(data[i].Item1, id,
+            var tuple = data.Find(s => s.Item4 == id);
+            ChatListViewModel.List.Add(new ChatListItemViewModel(Contacts[i], ChatListViewModel, tuple.Item1, id , tuple.Item2));
+            ContactViewModel.Contacts.Add(new EditContactViewModel(tuple.Item1, id,
                 ContactViewModel.Delete));
             var chatId = await GetChatId(id, user.UserId);
             //Todo Returns Null 

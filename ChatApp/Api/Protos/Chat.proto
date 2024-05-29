@@ -6,13 +6,6 @@ service ChatService {
   rpc OpenStream(Request) returns (stream Response);
 }
 
-
-
-
-
-
-
-
 message Request{
   string UserId = 1;
 }

@@ -4,6 +4,5 @@ public enum Type
 {
     Message,
     CreatedContact,
-    DeleteContact,
-    DeleteAccount
+    Delete
 }

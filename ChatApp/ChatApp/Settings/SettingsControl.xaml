@@ -12,14 +12,13 @@
     <Grid DataContext="{Binding ElementName=Control, Path=ViewModel }">
         <Grid.RowDefinitions>
             <RowDefinition/>
-            <RowDefinition Height="50"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" >
 
 
-            <Label Content="Settings" Foreground="White"
-                   FontFamily="{StaticResource SwLink}" FontSize="27" />
+            <Label Content="Settings" Foreground="White" FontFamily="{StaticResource SwLink}" FontSize="27" />
 
             <settingsInput:SettingsInputControl Height="50" Margin="0,10"
                                        ViewModel="{Binding NewNameSettingsInputViewModel}" />
@@ -38,4 +37,4 @@
                 Style="{StaticResource Button}"
                 Content="Save Changes"/>
     </Grid>
-</UserControl>
+</UserControl> 

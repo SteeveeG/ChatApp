@@ -19,6 +19,7 @@ public class HeaderViewModel : ViewModelBase
     {
         if (string.IsNullOrEmpty(byteString))
         {
+            ImageSource = null;
             return;
         }
         var list =new List<byte>();

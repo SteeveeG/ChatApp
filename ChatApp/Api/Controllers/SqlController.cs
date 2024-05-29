@@ -1,5 +1,4 @@
 using System.Data.SqlClient;
-using System.Windows.Controls.Primitives;
 using Dapper;
 using Library.Model;
 using Microsoft.AspNetCore.Mvc;
@@ -348,11 +347,11 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
 
 
     [HttpGet("GetContactNamesAndPb")]
-    public async Task<List<Tuple<string, string, string>>> GetContactNamesAndPb(string userId)
+    public async Task<List<Tuple<string, string, string,string>>> GetContactNamesAndPb(string userId)
     {
         IEnumerable<Contact> contacts = new List<Contact>();
         var contactsdata = new List<AccUser>();
-        var contactsTuple = new List<Tuple<string, string, string>>();
+        var contactsTuple = new List<Tuple<string, string, string,string>>();
         try
         {
             var con = new SqlConnection(connectionString);
@@ -363,11 +362,13 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             {
                 if (contact.UserId.Length == 52 || contact.CreatedContactUserId.Length == 52)
                 {
+                    var id = contact.UserId.Length == 52 ? contact.UserId : contact.CreatedContactUserId;
                     contactsdata.Add(new AccUser
                     {
                         Username = "Deleted Contact",
                         ProfilePicByte = string.Empty,
-                        ProfilePicType = string.Empty
+                        ProfilePicType = string.Empty,
+                        UserId = id
                     });
                     break;
                 }
@@ -376,22 +377,22 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
                 {
                     contactsdata.Add(con
                         .Query<AccUser>(
-                            $"Select Username, ProfilePicByte , ProfilePicType from AccUser where UserId Collate Latin1_General_CS_AS = '{contact.UserId}' order by UserId ASC  ")
+                            $"Select Username,UserId, ProfilePicByte , ProfilePicType from AccUser where UserId Collate Latin1_General_CS_AS = '{contact.UserId}' order by UserId ASC  ")
                         .ToArray()[0]);
                 }
                 else if (contact.UserId == userId)
                 {
                     contactsdata.Add(con
                         .Query<AccUser>(
-                            $"Select Username, ProfilePicByte , ProfilePicType from AccUser where UserId Collate Latin1_General_CS_AS = '{contact.CreatedContactUserId}' order by UserId ASC ")
+                            $"Select Username, UserId ,ProfilePicByte , ProfilePicType from AccUser where UserId Collate Latin1_General_CS_AS = '{contact.CreatedContactUserId}' order by UserId ASC ")
                         .ToArray()[0]);
                 }
             }
 
             con.Close();
             contactsTuple.AddRange(contactsdata.Select(contactdata =>
-                new Tuple<string, string, string>(contactdata.Username, contactdata.ProfilePicByte,
-                    contactdata.ProfilePicType)));
+                new Tuple<string, string, string,string>(contactdata.Username, contactdata.ProfilePicByte,
+                    contactdata.ProfilePicType , contactdata.UserId)));
         }
         catch (Exception e)
         {
@@ -409,6 +410,10 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         Tuple<string, string, string> contactsTuple;
         try
         {
+            if (userId.Length == 52)
+            {
+                return new Tuple<string, string, string>("Deleted Contact", string.Empty, string.Empty);
+            }
             var con = new SqlConnection(connectionString);
             con.Open();
             data = con
@@ -479,7 +484,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             messages = con.Query<Message>(
-                $"Select * from Message where ChatId Collate Latin1_General_CS_AS = '{chatId}' ");
+                $"Select * from Message where ChatId Collate Latin1_General_CS_AS = '{chatId}' order by  Time ASC");
             con.Close();
         }
         catch (Exception e)
@@ -535,6 +540,14 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             Console.WriteLine(e);
             throw;
         }
+        NotifyObserver(new Subscriber
+        {
+            Type = Type.Delete,
+            AccUser = new AccUser
+            {
+                UserId = userId
+            }
+        });
     }
 
     [HttpDelete("OwnDeleteAcc")]
@@ -615,26 +628,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         return list;
     }
 
-    private async Task<bool> CheckIfContactUsed(string userId, string contactId)
-    {
-        int count;
-        try
-        {
-            var con = new SqlConnection(connectionString);
-            con.Open();
-            count = con.Query<int>(
-                    $"Select Count(*) from Contact where CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}' and UserId Collate Latin1_General_CS_AS = '{contactId}'")
-                .ToArray()[0];
-            con.Close();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-
-        return count == 1;
-    }
+   
 
     private void NotifyObserver(Subscriber subscriber)
     {

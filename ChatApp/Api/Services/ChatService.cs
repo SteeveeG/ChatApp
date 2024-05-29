@@ -7,8 +7,8 @@ using Request = Grpc.Protos.Request;
 using Response = Grpc.Protos.Response;
 using Type = Library.Enum.Type;
 
-namespace Api.Services
-{
+namespace Api.Services;
+
     public class ChatService : Grpc.Protos.ChatService.ChatServiceBase, IObserver<Subscriber>
 
     {
@@ -88,23 +88,14 @@ namespace Api.Services
                      {
                          return false;
                      }
-
                     return request.UserId != subscriber.Message.UserId;
                 case Type.CreatedContact:
-                    if (request.UserId != subscriber.Contact.UserId)
-                    {
-                        return false;
-                    }
-                    break;
-                case Type.DeleteContact:
-                    //not implented
-                    break;
-                case Type.DeleteAccount:
-                    //not implented
-                    break;
+                    return request.UserId == subscriber.Contact.UserId;
+                case Type.Delete:
+                    var contacts = await sqlController.GetUserContacts(request.UserId);
+                    return contacts.Exists(t => t.UserId == subscriber.AccUser.UserId);
             }
 
             return true;
         }
     }
-}

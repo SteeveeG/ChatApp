@@ -26,7 +26,7 @@ public class ChatListItemViewModel : ViewModelBase
         CreatePb(byteString);
     }
 
-    public void CreatePb(string byteString)
+    private void CreatePb(string byteString)
     {
         if (string.IsNullOrEmpty(byteString))
         {
