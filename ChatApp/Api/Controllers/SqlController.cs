@@ -12,7 +12,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
 {
     private string connectionString;
     private readonly List<IObserver<Subscriber>> observers;
-
+    
     public SqlController()
     {
         GetLocalHost();
@@ -294,8 +294,9 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         {
             var con = new SqlConnection(connectionString);
             con.Open();
-            contacts = con.Query<Contact>(
-                $"Select * from Contact where UserId Collate Latin1_General_CS_AS = '{userId}'or CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}' order by UserId ASC ");
+            contacts = await con.QueryAsync<Contact>(
+                $"Select * from Contact where UserId Collate Latin1_General_CS_AS = '{userId}'" +
+                $"or CreatedContactUserId Collate Latin1_General_CS_AS = '{userId}' order by UserId ASC ");
             con.Close();
         }
         catch (Exception e)
@@ -370,7 +371,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
                         ProfilePicType = string.Empty,
                         UserId = id
                     });
-                    break;
+                continue;
                 }
 
                 if (contact.CreatedContactUserId == userId)
@@ -545,9 +546,10 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             Type = Type.Delete,
             AccUser = new AccUser
             {
-                UserId = userId
+                UserId = "FFFFFFF" + userId
             }
         });
+
     }
 
     [HttpDelete("OwnDeleteAcc")]
@@ -567,6 +569,16 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             }
 
             await InsertSql($"Delete AccUser where UserId = '{userId}'");
+            
+            NotifyObserver(new Subscriber
+            {
+                Type = Type.Delete,
+                AccUser = new AccUser
+                {
+                    UserId = "FFFFFFF" + userId
+                }
+            });
+            
             return true;
         }
         catch (Exception e)

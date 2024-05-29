@@ -65,8 +65,8 @@ namespace Api.Services;
                         {
                             Data = subscriberData
                         });
-                        isChanged = false;
                     }
+                    isChanged = false;
                 }
 
                 Thread.Sleep(50);
@@ -93,7 +93,12 @@ namespace Api.Services;
                     return request.UserId == subscriber.Contact.UserId;
                 case Type.Delete:
                     var contacts = await sqlController.GetUserContacts(request.UserId);
-                    return contacts.Exists(t => t.UserId == subscriber.AccUser.UserId);
+                    if ( contacts.Exists(t => t.UserId == subscriber.AccUser.UserId) || contacts.Exists(t => t.CreatedContactUserId == subscriber.AccUser.UserId))
+                    {
+                        return true;
+                    }
+                    return false;
+                
             }
 
             return true;

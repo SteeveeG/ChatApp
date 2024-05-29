@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using System.Web;
 using System.Windows;
 using System.Windows.Media;
+using ChatApp.ApiHandler;
 using ChatApp.Contact.EditContact;
 using Library.Model;
 
@@ -55,7 +57,10 @@ public class ContactViewModel : ViewModelBase
 
     public async void Delete(EditContactViewModel contact)
     {
-        if (!await MainViewModel.DeleteContact(contact.ContactUserId))
+        var contactId = HttpUtility.UrlEncode(contact.ContactUserId);
+        var convertedUserId = HttpUtility.UrlEncode(AccUser.UserId);
+        var chat =await Api.GetIn<Library.Model.Chat>($"Sql/GetChat?userId='{convertedUserId}'&contactId='{contactId}'");
+        if (!await MainViewModel.DeleteContact(contact.ContactUserId , chat.ChatId))
         {
             return;
         }

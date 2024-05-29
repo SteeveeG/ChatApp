@@ -144,14 +144,20 @@ public class MainViewModel : ViewModelBase
     {
         foreach (var contact in contacts)
         {
-            if (contact.UserId != userId)
+            if ("FFFFFFF"+contact.UserId != userId)
             {
                 continue;
             }
-            var ds =  ChatListViewModel.List.FirstOrDefault(s => s.ContactId == userId);
-            var ind = ChatListViewModel.List.IndexOf(ds);
+            var ind = ChatListViewModel.List.IndexOf(ChatListViewModel.List.FirstOrDefault(s => "FFFFFFF"+s.ContactId == userId));
             ChatListViewModel.List[ind].Name = "Deleted Contact";
             ChatListViewModel.List[ind].ContactId = "FFFFFFF" + ChatListViewModel.List[ind].ContactId;
+            ChatListViewModel.List[ind].ImageSource = null;
+            
+            var indexOf = ContactViewModel.Contacts.IndexOf(ContactViewModel.Contacts.FirstOrDefault(s => ("FFFFFFF"+ s.ContactUserId) == userId));
+            ContactViewModel.Contacts[indexOf].Name = "Deleted Contact";
+            ContactViewModel.Contacts[indexOf].ContactUserId =
+                "FFFFFFF" + ContactViewModel.Contacts[indexOf].ContactUserId;
+            OnPropertyChanged(nameof(ChatListViewModel.List));
         }
     }
 
@@ -196,7 +202,7 @@ public class MainViewModel : ViewModelBase
         return Messages[index];
     }
 
-    public async Task<bool> DeleteContact(string contactId)
+    public async Task<bool> DeleteContact(string contactId, string chatId)
     {
         contactId = HttpUtility.UrlEncode(contactId);
         var convertedUserId = HttpUtility.UrlEncode(user.UserId);
@@ -206,6 +212,10 @@ public class MainViewModel : ViewModelBase
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         try
         {
+            foreach (var msg in Messages.Where(msg => msg[^1].ChatId == chatId))
+            {
+                Messages.RemoveAt(msg.IndexOf(msg[^1]));
+            }
             await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}&userId={convertedUserId}");
         }
         catch

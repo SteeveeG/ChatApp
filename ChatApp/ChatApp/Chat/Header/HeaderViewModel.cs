@@ -27,7 +27,7 @@ public class HeaderViewModel : ViewModelBase
         foreach (var bytechar in byteString)
         {
             if (bytechar != '{' && bytechar != ',')
-            {
+            {                                               
                 str += bytechar;
             }
             else if (bytechar == ',')

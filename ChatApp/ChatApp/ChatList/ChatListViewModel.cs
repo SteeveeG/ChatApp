@@ -12,11 +12,11 @@ namespace ChatApp.ChatList;
 public class ChatListViewModel : ViewModelBase
 {
     private ObservableCollection<ChatListItemViewModel> list;
-    private ChatViewModel ChatViewModel { get; set; }
     private string userId;
     private Func<int, List<Message>> getMessage;
     private Func<string,  Task<string>> getChatId;
 
+    public ChatViewModel ChatViewModel { get; set; }
     public ChatListViewModel(ChatViewModel chatViewModel)
     {
         List = new ObservableCollection<ChatListItemViewModel>();
