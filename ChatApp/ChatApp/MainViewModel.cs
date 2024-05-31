@@ -27,6 +27,7 @@ public class MainViewModel : ViewModelBase
     private List<List<Message>> messages;
     private int curentChatIndex;
     private string CurrentChatId;
+    private bool isUpdating;
     public HomeNavbarViewModel HomeNavbarViewModel { get; set; }
     public ChatListViewModel ChatListViewModel { get; set; }
     public ChatViewModel ChatViewModel { get; set; }
@@ -34,7 +35,7 @@ public class MainViewModel : ViewModelBase
     public ContactViewModel ContactViewModel { get; set; }
     public Func<int, List<Message>> GetMessage { get; set; }
     public Func<string, Task<string>> GetChatIdFunc { get; set; }
-
+    public static readonly Object obj = new Object();
     public MainViewModel()
     {
         ChatViewModel = new ChatViewModel();
@@ -127,7 +128,16 @@ public class MainViewModel : ViewModelBase
         switch (sub.Type)
         {
             case Type.CreatedContact:
-                Application.Current.Dispatcher.Invoke(() => UpdateContacts(sub.Contact, true));
+                do
+                {
+                    if (isUpdating)
+                    {
+                        Thread.Sleep(250);
+                        continue;
+                    }
+                    Application.Current.Dispatcher.Invoke(() => UpdateContacts(sub.Contact, true));
+                    break;
+                } while (true);
                 break;
             case Type.Message:
                 Application.Current.Dispatcher.Invoke(() => UpdateMessages(sub.Message));
@@ -142,11 +152,21 @@ public class MainViewModel : ViewModelBase
 
     private void UpdateDeleted(string userId)
     {
-        foreach (var contact in contacts)
-        {
-            if ("FFFFFFF"+contact.UserId != userId)
+        foreach (var contact in Contacts)
+        { 
+            if (contact.UserId.Length != 52)
             {
-                continue;
+                if ("FFFFFFF"+contact.UserId != userId)
+                {
+                    continue;
+                }
+            }
+            else
+            { 
+                if (contact.UserId != userId)
+                {
+                    continue;
+                }
             }
             var ind = ChatListViewModel.List.IndexOf(ChatListViewModel.List.FirstOrDefault(s => "FFFFFFF"+s.ContactId == userId));
             ChatListViewModel.List[ind].Name = "Deleted Contact";
@@ -204,49 +224,89 @@ public class MainViewModel : ViewModelBase
 
     public async Task<bool> DeleteContact(string contactId, string chatId)
     {
-        contactId = HttpUtility.UrlEncode(contactId);
-        var convertedUserId = HttpUtility.UrlEncode(user.UserId);
         using var client = new HttpClient();
         client.BaseAddress = new Uri("https://localhost:7049");
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         try
         {
-            foreach (var msg in Messages.Where(msg => msg[^1].ChatId == chatId))
+            var messageToRemove = Messages.FirstOrDefault(m => m.Count == 0 || m[^1].ChatId == chatId);
+            if (messageToRemove != null)
             {
-                Messages.RemoveAt(msg.IndexOf(msg[^1]));
+                Messages.Remove(messageToRemove);
+                await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}&userId={user.UserId}");
+                return true;
             }
-            await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}&userId={convertedUserId}");
         }
-        catch
+        catch (HttpRequestException ex)
         {
-            return false;
+            Console.WriteLine($"Request error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error: {ex.Message}");
         }
 
-        return true;
+        return false;
+        
+        
+        // try
+        // {
+        //     var count = Messages.Count;
+        //     foreach (var message in Messages)
+        //     {
+        //         if (message.Count == 0 )
+        //         {
+        //              continue;
+        //         }
+        //
+        //         if (message[^1].ChatId == chatId)
+        //         {
+        //             Messages.Remove(message);
+        //             await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}&userId={user.UserId}");
+        //             break;
+        //         }
+        //     }
+        //
+        //     if (count == Messages.Count)
+        //     {
+        //         foreach (var message in Messages)
+        //         {
+        //             if (message.Count != 0)
+        //             {
+        //                 continue;
+        //             }
+        //             Messages.Remove(message);
+        //             await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}&userId={user.UserId}");
+        //             break;
+        //         }
+        //     }
+        // }
+        // catch
+        // {
+        //     return false;
+        // }
+        //
+        // return true;
     }
 
     private async Task AddChatMessages(string chatId)
     {
-        var convertedchatId = HttpUtility.UrlEncode(chatId);
-        var result = await Api.GetIn<List<Message>>($"Sql/GetMessages?chatId={convertedchatId}");
+        var result = await Api.GetIn<List<Message>>($"Sql/GetMessages?chatId={chatId}");
         Messages.Add(result ?? new List<Message>());
     }
 
     private async Task<string> GetChatId(string contactId, string userId)
     {
-        var convertedcontactId = HttpUtility.UrlEncode(contactId);
-        var converteduserId = HttpUtility.UrlEncode(userId);
         var chat = await Api.GetIn<Library.Model.Chat>(
-            $"Sql/GetChat?userId={converteduserId}&contactId={convertedcontactId}");
+            $"Sql/GetChat?userId={userId}&contactId={contactId}");
         return chat.ChatId;
     }
 
     private async void GetContacts()
     {
-        var converteduserId = HttpUtility.UrlEncode(user.UserId);
-        Contacts = await Api.GetIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={converteduserId}");
-        var data = await Api.GetIn<List<Tuple<string,string,string,string>>>($"Sql/GetContactNamesAndPb?userId={converteduserId}");
+        Contacts = await Api.GetIn<List<Library.Model.Contact>>($"Sql/GetUserContacts?userId={user.UserId}");
+        var data = await Api.GetIn<List<Tuple<string,string,string,string>>>($"Sql/GetContactNamesAndPb?userId={user.UserId}");
      
         if (Contacts == null)
         {
@@ -261,7 +321,7 @@ public class MainViewModel : ViewModelBase
             ContactViewModel.Contacts.Add(new EditContactViewModel(tuple.Item1, id,
                 ContactViewModel.Delete));
             var chatId = await GetChatId(id, user.UserId);
-            //Todo Returns Null 
+  
             await AddChatMessages(chatId);
         }
     }
@@ -278,6 +338,7 @@ public class MainViewModel : ViewModelBase
         ChatListViewModel.List.Add(new ChatListItemViewModel(contact, ChatListViewModel, name.Item1, id,name.Item2));
         ContactViewModel.Contacts.Add(new EditContactViewModel(name.Item1, id, ContactViewModel.Delete));
         Messages.Add(new List<Message>());
+        Contacts.Add(contact);
     }
 
 
@@ -287,11 +348,8 @@ public class MainViewModel : ViewModelBase
         {
             return;
         }
-
-        var convertedUserId = HttpUtility.UrlEncode(contact.CreatedContactUserId);
-        var convertedContactId = HttpUtility.UrlEncode(contact.UserId);
         await Api.GetIn<Library.Model.Chat>(
-            $"Sql/CreateChat?userId={convertedUserId}&contactId={convertedContactId}");
+            $"Sql/CreateChat?userId={contact.CreatedContactUserId}&contactId={contact.UserId}");
     }
 
     public void NewName(string newUsername)
@@ -322,5 +380,14 @@ public class MainViewModel : ViewModelBase
         }
     }
 
- 
+    public bool IsUpdating
+    {
+        get => isUpdating;
+        set
+        {
+            if (value == isUpdating) return;
+            isUpdating = value;
+            OnPropertyChanged();
+        }
+    }
 }

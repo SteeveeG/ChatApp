@@ -465,7 +465,9 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var con = new SqlConnection(connectionString);
             con.Open();
             chat = con.Query<Chat>(
-                $"Select * from Chat where CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}' and UserId Collate Latin1_General_CS_AS = '{contactId}' or CreatedChatUserId Collate Latin1_General_CS_AS = '{contactId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
+                $"Select * from Chat where CreatedChatUserId Collate Latin1_General_CS_AS = '{userId}'" +
+                $" and UserId Collate Latin1_General_CS_AS = '{contactId}' or CreatedChatUserId Collate " +
+                $"Latin1_General_CS_AS = '{contactId}' and UserId Collate Latin1_General_CS_AS = '{userId}'");
             con.Close();
         }
         catch (Exception e)
@@ -564,8 +566,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
             var contacts = iEnurmerableContacts.ToList();
             foreach (var contact in contacts)
             {
-                DeleteContact(contact.CreatedContactUserId == userId ? contact.UserId : contact.CreatedContactUserId,
-                    userId);
+                DeleteContact(contact.CreatedContactUserId == userId ? contact.UserId : contact.CreatedContactUserId, userId);
             }
 
             await InsertSql($"Delete AccUser where UserId = '{userId}'");
@@ -594,7 +595,7 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
         string userId;
         do
         {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             userId = new string(Enumerable.Repeat(chars, 45)
                 .Select(s => s[random.Next(s.Length)]).ToArray());
         } while (false);
@@ -654,8 +655,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
     {
         var myServer = Environment.MachineName;
         connectionString =
-            @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
-        // @$"Server={myServer};Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
+        // @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
+       @$"Server={myServer};Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
     }
 
 

@@ -40,8 +40,7 @@ public class SettingsViewModel : ViewModelBase
 
     private async Task<bool> Delete()
     {
-        var userId = HttpUtility.UrlEncode(accUser.UserId);
-        return await Api.Delete<bool>($"Sql/OwnDeleteAcc?userId={userId}");
+        return await Api.Delete<bool>($"Sql/OwnDeleteAcc?userId={accUser.UserId}");
     }
 
 
@@ -159,8 +158,8 @@ public class SettingsViewModel : ViewModelBase
                 var filecontent = new ByteArrayContent(PbArray);
                 filecontent.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
                 content.Add(filecontent, "file", Path.GetFileName(path));
-                var converteduserId = HttpUtility.UrlEncode(accUser.UserId);
-                var response = await client.PostAsync($"Sql/PostProfilePic?userId={converteduserId}", content);
+            
+                var response = await client.PostAsync($"Sql/PostProfilePic?userId={accUser.UserId}", content);
                 result = response.Content.ReadAsStringAsync().Result.Replace("\"", string.Empty);
             }
 

@@ -93,7 +93,8 @@ namespace Api.Services;
                     return request.UserId == subscriber.Contact.UserId;
                 case Type.Delete:
                     var contacts = await sqlController.GetUserContacts(request.UserId);
-                    if ( contacts.Exists(t => t.UserId == subscriber.AccUser.UserId) || contacts.Exists(t => t.CreatedContactUserId == subscriber.AccUser.UserId))
+                    if ( contacts.Exists(t => t.UserId == subscriber.AccUser.UserId) ||
+                         contacts.Exists(t => t.CreatedContactUserId == subscriber.AccUser.UserId))
                     {
                         return true;
                     }

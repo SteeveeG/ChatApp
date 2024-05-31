@@ -39,31 +39,40 @@ public class ContactViewModel : ViewModelBase
 
     private void CopyUserId()
     {
-      Clipboard.SetText(userId);
-      CopyText = "Copied";
-      OldText();
-
+        Clipboard.SetText(userId);
+        CopyText = "Copied";
+        OldText();
     }
+
     private async void OldText()
     {
-        await Task.Delay(2000);  
+        await Task.Delay(2000);
         CopyText = "Copy User-Id";
     }
 
     public void UpdateContactList(Library.Model.Contact contact)
     {
-        MainViewModel.UpdateContacts(contact , false);
+        MainViewModel.IsUpdating = true;
+        MainViewModel.UpdateContacts(contact, false);
+        MainViewModel.IsUpdating = false;
     }
 
     public async void Delete(EditContactViewModel contact)
     {
-        var contactId = HttpUtility.UrlEncode(contact.ContactUserId);
-        var convertedUserId = HttpUtility.UrlEncode(AccUser.UserId);
-        var chat =await Api.GetIn<Library.Model.Chat>($"Sql/GetChat?userId='{convertedUserId}'&contactId='{contactId}'");
-        if (!await MainViewModel.DeleteContact(contact.ContactUserId , chat.ChatId))
+        if (contact.ContactUserId.Length != 52)
+        {
+            contact.ContactUserId = "FFFFFFF" + contact.ContactUserId;
+        }
+
+ 
+ 
+        var chat = await Api.GetIn<Library.Model.Chat>(
+            $"Sql/GetChat?userId={AccUser.UserId}&contactId={contact.ContactUserId}");
+        if (!await MainViewModel.DeleteContact(contact.ContactUserId, chat.ChatId))
         {
             return;
         }
+
         Contacts.Remove(Contacts[Contacts.IndexOf(contact)]);
         MainViewModel.ChatListViewModel.RemoveContact(contact);
         MainViewModel.ChatViewModel.ClearFont();

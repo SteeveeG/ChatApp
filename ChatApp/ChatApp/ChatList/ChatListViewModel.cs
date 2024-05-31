@@ -34,8 +34,7 @@ public class ChatListViewModel : ViewModelBase
     }
     public async void Click(int index)
     {
-        var converted =  HttpUtility.UrlEncode(List[index].ContactId);
-        var accuser = await Api.GetIn<Tuple<string,string,string>>($"Sql/GetNamesAndPb?userId={converted}");
+        var accuser = await Api.GetIn<Tuple<string,string,string>>($"Sql/GetNamesAndPb?userId={List[index].ContactId}");
         ChatViewModel.HeaderViewModel.Name = accuser.Item1;
         var chatId = await getChatId(List[index].ContactId);
         ChatViewModel.ChatId = chatId;
