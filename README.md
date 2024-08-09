@@ -8,7 +8,7 @@ einer c# Libary und einer API die mit einem Grpc Service zusammengeschmolzen ist
 
 #### Ps: 
 Dies hier ist ein **Übungs / Hobby Projekt** von mir und behandelt datenschutzt,
-Cybersecurety **nicht** da dieses Projekt mehr für mich diente, ein bisschen tiefer in die 
+Cybersecurity **nicht** da dieses Projekt mehr für mich diente, ein bisschen tiefer in die 
 c# Thematik zu tauchen und mehr in diesem Bereich der Software Entwicklung zu lernen.
 
 ## En
