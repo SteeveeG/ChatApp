@@ -31,7 +31,7 @@ c# topic and to learn more in this area of software development
 ![ChatWindow.png](Preview/ChatWindow.png)
 
 #### Contact Settings  
-![Contact Settings.png](Preview/Contact_Settings.png)
+![Contact Settings.png](Preview/ContactSettings.png)
 
 #### Adding New Contact
 ![AddingNewContact.png](Preview/AddingNewContact.png)
