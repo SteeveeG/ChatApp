@@ -1,4 +1,6 @@
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
 using ChatApp.ApiHandler;
 using ChatApp.CustomMessageBox;
 using ChatApp.LoginRegisterMenu.LoginControl;
@@ -39,6 +41,15 @@ public class LoginRegisterMenuViewModel : ViewModelBase
 
     public async Task<AccUser> ControlLogin()
     {
+        using (var sha256 = SHA256.Create())
+        {
+            byte[] inputBytes;
+            inputBytes = Encoding.UTF8.GetBytes(LoginViewModel.Password);
+            byte[] hashBytes;
+            hashBytes = sha256.ComputeHash(inputBytes);
+            LoginViewModel.Password = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+        }
+        
         var user = await Login(LoginViewModel.Name, LoginViewModel.Password);
         if (user.UserId == null)
         {

@@ -5,7 +5,6 @@ public class EditContactViewModel : ViewModelBase
     private string contactUserId;
     private string name;
     public Action<EditContactViewModel> Action { get; set; }
-    public string UserIdView => $"User-Id: {ContactUserId}";
     public EditContactViewModel(string name,string contactUserId , Action<EditContactViewModel> action)
     {
         ContactUserId = contactUserId;

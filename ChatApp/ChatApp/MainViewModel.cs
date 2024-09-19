@@ -248,46 +248,6 @@ public class MainViewModel : ViewModelBase
         }
 
         return false;
-        
-        
-        // try
-        // {
-        //     var count = Messages.Count;
-        //     foreach (var message in Messages)
-        //     {
-        //         if (message.Count == 0 )
-        //         {
-        //              continue;
-        //         }
-        //
-        //         if (message[^1].ChatId == chatId)
-        //         {
-        //             Messages.Remove(message);
-        //             await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}&userId={user.UserId}");
-        //             break;
-        //         }
-        //     }
-        //
-        //     if (count == Messages.Count)
-        //     {
-        //         foreach (var message in Messages)
-        //         {
-        //             if (message.Count != 0)
-        //             {
-        //                 continue;
-        //             }
-        //             Messages.Remove(message);
-        //             await client.DeleteAsync($"Sql/DeleteContact?contactId={contactId}&userId={user.UserId}");
-        //             break;
-        //         }
-        //     }
-        // }
-        // catch
-        // {
-        //     return false;
-        // }
-        //
-        // return true;
     }
 
     private async Task AddChatMessages(string chatId)

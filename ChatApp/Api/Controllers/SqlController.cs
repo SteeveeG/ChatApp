@@ -655,8 +655,8 @@ public class SqlController : ControllerBase, IObservable<Subscriber>
     {
         var myServer = Environment.MachineName;
         connectionString =
-        // @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
-       @$"Server={myServer};Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
+          @$"Server={myServer}\MSSQL2022;Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
+        //   @$"Server={myServer};Database=ChatApp;Trusted_Connection=True;MultipleActiveResultSets=True";
     }
 
 

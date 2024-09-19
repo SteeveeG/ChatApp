@@ -29,7 +29,6 @@ public class TextBoxViewModel : ViewModelBase
             return;
         }
         BorderBrush = Brushes.LightSlateGray;
-        //ChatViewModel.Messages.Add(new MessageViewModel(Message, true));
         var messageModel = new Message
         {
             UserId = accUser.UserId,
