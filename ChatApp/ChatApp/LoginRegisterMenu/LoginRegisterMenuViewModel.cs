@@ -35,22 +35,24 @@ public class LoginRegisterMenuViewModel : ViewModelBase
             RegisterViewModel.RegisterSucceeded();
             return true;
         }
+        
         CustomMessageBoxHandler.Create($"{tupleResult.Item2}");
         return false;
     }
 
     public async Task<AccUser> ControlLogin()
     {
+        var password = LoginViewModel.Password;
         using (var sha256 = SHA256.Create())
         {
             byte[] inputBytes;
-            inputBytes = Encoding.UTF8.GetBytes(LoginViewModel.Password);
+            inputBytes = Encoding.UTF8.GetBytes(password);
             byte[] hashBytes;
             hashBytes = sha256.ComputeHash(inputBytes);
-            LoginViewModel.Password = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+            password = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
         }
         
-        var user = await Login(LoginViewModel.Name, LoginViewModel.Password);
+        var user = await Login(LoginViewModel.Name, password);
         if (user.UserId == null)
         {
             LoginViewModel.LoginFailed();

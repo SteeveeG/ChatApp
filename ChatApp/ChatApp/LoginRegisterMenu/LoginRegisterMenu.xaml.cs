@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -43,7 +45,20 @@ public partial class LoginRegisterMenu : Window
         {
             return;
         }
-        var accUser = await viewModel.Create(viewModel.RegisterViewModel.Name, viewModel.RegisterViewModel.Password);
+
+        var password = viewModel.RegisterViewModel.Password;
+        
+        using (var sha256 = SHA256.Create())
+        {
+            byte[] inputBytes;
+            inputBytes = Encoding.UTF8.GetBytes(password);
+            byte[] hashBytes;
+            hashBytes = sha256.ComputeHash(inputBytes);
+            password = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+        }
+        
+        
+        var accUser = await viewModel.Create(viewModel.RegisterViewModel.Name, password);
         var mainWindow = new MainWindow();
         mainWindow.Init();
         mainWindow.DataContext = new MainViewModel(accUser);
